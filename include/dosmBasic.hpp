@@ -1,6 +1,7 @@
 #ifndef DOSM_BASIC_HPP
 #define DOSM_BASIC_HPP
 
+#include "dosmLog.hpp"
 #include "dosmTensor.hpp"
 #include <cstdint>
 #include <complex>
@@ -25,6 +26,9 @@ namespace dosm {
 
 	using buf_t  = std::uint8_t;
 	using bool_t = bool;
+
+	template<typename T, idx_t... dims> using tensor_t = tensor<T, dims...>;
+
 } // namespace dosm
 
 #endif // DOSM_BASIC_HPP

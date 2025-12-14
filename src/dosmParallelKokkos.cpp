@@ -1,11 +1,11 @@
 #include "dosmParallelKokkos.hpp"
 
-void DosmParallelKokkos::init() 
+void DosmParallelKokkos::init(void) 
 { 
 	Kokkos::initialize();
 }
 
-void DosmParallelKokkos::release() 
+void DosmParallelKokkos::release(void) 
 {
 	Kokkos::finalize();
 }

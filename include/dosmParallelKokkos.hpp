@@ -6,10 +6,10 @@
 
 class DosmParallelKokkos : public IDosmParallel {
 	public:
-		DosmParallelKokkos() = default;
-		~DosmParallelKokkos() override = default;
-		void init() override;
-		void release() override;
+		DosmParallelKokkos(void) = default;
+		~DosmParallelKokkos(void) override = default;
+		void init(void) override;
+		void release(void) override;
 		void dispatch(dosm::idx_t N, const std::function<void(dosm::idx_t)>& routine) override;
 		void dispatch(dosm::idx_t N, const std::function<dosm::r64_t(dosm::idx_t)>& routine, dosm::r64_t& result) override;
 };
