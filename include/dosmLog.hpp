@@ -1,6 +1,7 @@
 #ifndef DOSM_LOG_HPP
 #define DOSM_LOG_HPP
 
+#include "dosmBasic.hpp"
 #include <iostream>
 #include <string>
 
@@ -21,7 +22,7 @@ namespace dosm
 #ifdef DOSM_ENABLE_LOG
 #define DOSM_LOG(LVL, msg)                                                                                         \
 	do {                                                                                                            \
-		if (static_cast<int>(LVL) <= static_cast<int>(dosm::CURRENT_LOG_LVL))                                        \
+		if (static_cast<ui8_t>(LVL) <= static_cast<ui8_t>(dosm::CURRENT_LOG_LVL))                                    \
 		{                                                                                                            \
 			std::ostream& os = ((LVL == dosm::logLVL::ERROR) || (LVL == dosm::logLVL::WARN)) ? std::cerr : std::cout; \
 			os << "[DOSM] ";                                                                                          \
@@ -35,8 +36,18 @@ namespace dosm
 			os << msg << std::endl;                                                                                   \
 		}                                                                                                            \
 	} while (0)
+
+
+#define DOSM_PROGRESS(label, done, total)                                                                                     \
+	do {                                                                                                                       \
+		ui8_t pct  = (100 * (done)) / (total);                                                                                  \
+		std::cout << "\r[DOSM] " + std::string(label) + ": " + std::to_string((done)==(total) ? 100 : pct) + "%" << std::flush; \
+		if ((done) == (total)) std::cout << std::endl;                                                                          \
+	} while (0)                                                                                                                \
+
 #else
 #define DOSM_LOG(LVL, msg) do {} while (0)
+#define DOSM_PROGRESS(label, done, total) do {} while (0)
 #endif
 #define DOSM_LOG_ERROR(msg) DOSM_LOG(dosm::logLVL::ERROR, msg)
 #define DOSM_LOG_WARN(msg)  DOSM_LOG(dosm::logLVL::WARN,  msg)
@@ -44,3 +55,10 @@ namespace dosm
 #define DOSM_LOG_DEBUG(msg) DOSM_LOG(dosm::logLVL::DEBUG, msg)
 
 #endif // DOSM_LOG_HPP
+
+
+
+
+
+
+

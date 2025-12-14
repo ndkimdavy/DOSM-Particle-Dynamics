@@ -36,16 +36,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(eigen)
 
 # ---------------------------
-# Fastor
-# ---------------------------
-FetchContent_Declare(
-		fastor
-		GIT_REPOSITORY https://github.com/romeric/Fastor.git
-		GIT_TAG        v0.1
-		)
-FetchContent_MakeAvailable(fastor)
-
-# ---------------------------
 # Raylib
 # ---------------------------
 set(EIGEN_BUILD_TESTING OFF CACHE BOOL "" FORCE)
@@ -65,7 +55,7 @@ set(DOSM_SOURCES
 		src/dosmEntity.cpp
 		src/dosmFactor.cpp
 		src/dosmLawBasic.cpp
-		src/dosmParallelKokkos.cpp
+		src/dosmLawLennardJones.cpp 
 		src/dosmVisualRaylib.cpp
 	)
 
@@ -79,7 +69,6 @@ target_include_directories(dosm
 		${PROJECT_SOURCE_DIR}/include
 		${PROJECT_SOURCE_DIR}/interface
 		${PROJECT_SOURCE_DIR}/impl
-		${fastor_SOURCE_DIR}
 		)
 
 target_link_libraries(dosm
@@ -89,8 +78,9 @@ target_link_libraries(dosm
 		)
 
 target_compile_definitions(dosm 
-		PUBLIC DOSM_MATH_EIGEN
 		PUBLIC DOSM_ENABLE_LOG
+		PUBLIC DOSM_PARALLEL_KOKKOS
+		PUBLIC DOSM_MATH_EIGEN
 		)
 
 # ---------------------------

@@ -2,9 +2,9 @@
 #define DOSM_BASIC_HPP
 
 #include "dosmLog.hpp"
-#include "dosmTensor.hpp"
 #include <cstdint>
 #include <complex>
+#include <cstddef>
 
 namespace dosm {
 
@@ -24,10 +24,9 @@ namespace dosm {
 	using c32_t = std::complex<float>;
 	using c64_t = std::complex<double>;
 
+	using idx_t  = std::size_t;
 	using buf_t  = std::uint8_t;
 	using bool_t = bool;
-
-	template<typename T, idx_t... dims> using tensor_t = tensor<T, dims...>;
 
 } // namespace dosm
 

@@ -3,6 +3,9 @@
 
 #include "dosmBasic.hpp"
 #include "dosmParticle.hpp"
+#include "dosmLawLennardJones.hpp"
+#include "dosmParallel.hpp"
+#include <functional>
 #include <vector>
 #include <string>
 
@@ -12,13 +15,18 @@ namespace dosm
 	{
 		public:
 			Factor(const std::string& file);
+			~Factor(void) = default;
+
 			void run(void); 
 
 		private:
-			void loadFile(const std::string& xyz_file);
+			void loadFile(const std::string& file);
+			void outFile(void);
 
 		private:
 			std::vector<Particle> particles;
+			DosmLawLennardJones dosmLawLJ;
+			DosmParallel<std::function<void(idx_t)>> dosmParallel;
 	};
 
 } // namespace dosm

@@ -2,6 +2,7 @@
 #define DOSM_ENTITY_HPP
 
 #include "dosmBasic.hpp"
+#include "dosmTensor.hpp"
 
 namespace dosm
 {

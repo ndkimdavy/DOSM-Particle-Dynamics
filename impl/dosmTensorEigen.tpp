@@ -1,7 +1,6 @@
 #ifndef DOSM_TENSOR_EIGEN_TPP
 #define DOSM_TENSOR_EIGEN_TPP
 
-#include "dosmTensor.hpp"
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 

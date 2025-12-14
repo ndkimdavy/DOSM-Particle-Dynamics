@@ -1,12 +1,11 @@
 #ifndef DOSM_TENSOR_HPP
 #define DOSM_TENSOR_HPP
 
-#include <cstdint>
+#include "dosmBasic.hpp"
 #include <vector>
+#include <initializer_list>
 
 namespace dosm {
-
-	using idx_t = std::uint16_t;
 
 	template<typename T, idx_t... dims>
 		struct tensor
@@ -27,7 +26,7 @@ namespace dosm {
 			tensor<T, dims...> normalize(void) const;
 			auto t(void) const;
 		};
-
+	template<typename T, idx_t... dims1> using tensor_t = tensor<T, dims1...>;
 	template<typename T, idx_t... dims1> auto operator+(const tensor<T, dims1...>& X, const tensor<T, dims1...>& Y);
 	template<typename T, idx_t... dims1> auto operator-(const tensor<T, dims1...>& X, const tensor<T, dims1...>& Y);
 	template<typename T, idx_t... dims1> auto operator-(const tensor<T, dims1...>& X);
