@@ -5,28 +5,33 @@
 
 namespace dosm
 {
-	class Particle : public Entity
+	class DosmParticle : public DosmEntity
 	{
 		public:
 			r64_t energy;
 			tensor_t<r64_t, 3> force;
 
-			Particle(void) : Entity()
-		{
-			energy = 0.0;
-			force(0) = force(1) = force(2) = 0.0;
-		}
-
-			explicit Particle(r64_t mass, r64_t charge = 0.0) : Entity(mass, charge) 
-		{
-			energy = 0.0;
-			force(0) = force(1) = force(2) = 0.0;
-		}
-
-			virtual ~Particle(void) = default;
+			DosmParticle(void);
+			explicit DosmParticle(r64_t mass, r64_t charge);
+			virtual ~DosmParticle(void) = default;
 	};
 
-} // namespace dosm
+	struct DosmParticleSnap
+	{
+		struct Snap
+		{
+			r64_t t;
+			vector_t<DosmParticle> particles;
+		};
+
+		vector_t<Snap> snaps;
+	};
+}
 
 #endif // DOSM_PARTICLE_HPP
+
+
+
+
+
 

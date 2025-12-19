@@ -2,7 +2,6 @@
 #define DOSM_TENSOR_HPP
 
 #include "dosmBasic.hpp"
-#include <vector>
 #include <initializer_list>
 
 namespace dosm {
@@ -15,7 +14,7 @@ namespace dosm {
 			static inline constexpr idx_t size = (dims * ... * 1);
 
 			T data[size];
-			std::vector<idx_t> axes;
+			vector_t<idx_t> axes;
 
 			template<typename... I> T& operator()(I... i);
 			template<typename... I> const T& operator()(I... i) const;

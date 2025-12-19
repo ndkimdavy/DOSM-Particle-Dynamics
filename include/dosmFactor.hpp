@@ -6,25 +6,23 @@
 #include "dosmLawLennardJones.hpp"
 #include "dosmParallel.hpp"
 #include <functional>
-#include <vector>
-#include <string>
 
 namespace dosm
 {
-	class Factor
+	class DosmFactor
 	{
 		public:
-			Factor(const std::string& file);
-			~Factor(void) = default;
+			DosmFactor(const str_t& file);
+			~DosmFactor(void) = default;
 
 			void run(void); 
 
 		private:
-			void loadFile(const std::string& file);
+			void loadFile(const str_t& file);
 			void outFile(void);
 
 		private:
-			std::vector<Particle> particles;
+			DosmParticleSnap dosmParticleSnap;
 			DosmLawLennardJones dosmLawLJ;
 			DosmParallel<std::function<void(idx_t)>> dosmParallel;
 	};

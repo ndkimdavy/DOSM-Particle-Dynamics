@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <complex>
 #include <cstddef>
+#include <string>
+#include <vector>
 
 namespace dosm {
 
@@ -27,6 +29,10 @@ namespace dosm {
 	using idx_t  = std::size_t;
 	using buf_t  = std::uint8_t;
 	using bool_t = bool;
+
+	using chr_t = char;
+	using str_t = std::string;
+	template<typename T> using vector_t = std::vector<T>;
 
 } // namespace dosm
 

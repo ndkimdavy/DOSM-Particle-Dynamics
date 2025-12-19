@@ -3,7 +3,6 @@
 
 #include "dosmBasic.hpp"
 #include <iostream>
-#include <string>
 
 namespace dosm
 {
@@ -41,7 +40,7 @@ namespace dosm
 #define DOSM_PROGRESS(label, done, total)                                                                                     \
 	do {                                                                                                                       \
 		ui8_t pct  = (100 * (done)) / (total);                                                                                  \
-		std::cout << "\r[DOSM] " + std::string(label) + ": " + std::to_string((done)==(total) ? 100 : pct) + "%" << std::flush; \
+		std::cout << "\r[DOSM] " + str_t(label) + ": " + std::to_string((done)==(total) ? 100 : pct) + "%" << std::flush; \
 		if ((done) == (total)) std::cout << std::endl;                                                                          \
 	} while (0)                                                                                                                \
 

@@ -3,7 +3,6 @@
 
 #include "dosmBasic.hpp"
 #include "dosmParticle.hpp"
-#include <vector>
 
 namespace dosm
 {
@@ -13,19 +12,19 @@ namespace dosm
 			struct Result
 			{
 				r64_t energy;    
-				std::vector<Particle>* particles; 
+				vector_t<DosmParticle>* particles; 
 			};
 
 			DosmLawLennardJones(void) = default;
-			DosmLawLennardJones(std::vector<Particle> particles, r64_t sigma = 1.0, r64_t epsilon = 1.0);
+			DosmLawLennardJones(vector_t<DosmParticle> particles, r64_t sigma, r64_t epsilon);
 			~DosmLawLennardJones(void) = default;
-			
+
 			void kernel(Result* result);
 
 		private:
 			r64_t sigma;
 			r64_t epsilon;
-			std::vector<Particle> particles; 
+			vector_t<DosmParticle> particles; 
 	};
 
 } // namespace dosm

@@ -53,6 +53,7 @@ FetchContent_MakeAvailable(raylib)
 # ---------------------------
 set(DOSM_SOURCES
 		src/dosmEntity.cpp
+		src/dosmParticle.cpp
 		src/dosmFactor.cpp
 		src/dosmLawBasic.cpp
 		src/dosmLawLennardJones.cpp 
