@@ -1,30 +1,21 @@
 #ifndef DOSM_LAW_LENNARD_JONES_HPP
 #define DOSM_LAW_LENNARD_JONES_HPP
 
-#include "dosmBasic.hpp"
-#include "dosmParticle.hpp"
+#include "idosmLaw.hpp"
 
 namespace dosm
 {
-	class DosmLawLennardJones
+	class DosmLawLennardJones : public IDosmLaw
 	{
 		public:
-			struct Result
-			{
-				r64_t energy;    
-				vector_t<DosmParticle>* particles; 
-			};
-
-			DosmLawLennardJones(void) = default;
 			DosmLawLennardJones(vector_t<DosmParticle> particles, r64_t sigma, r64_t epsilon);
 			~DosmLawLennardJones(void) = default;
+			void kernel(Result* result) override;
 
-			void kernel(Result* result);
-
-		private:
+		protected:
 			r64_t sigma;
 			r64_t epsilon;
-			vector_t<DosmParticle> particles; 
+			vector_t<DosmParticle> particles;
 	};
 
 } // namespace dosm

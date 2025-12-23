@@ -31,6 +31,7 @@ namespace dosm
 				r64_t dy = particles[j].position(1) - particles[i].position(1);
 				r64_t dz = particles[j].position(2) - particles[i].position(2);
 				r64_t r2 = dx*dx + dy*dy + dz*dz;
+				if (r2 == 0.0) continue;
 				r64_t sigma2 = sigma * sigma;
 
 				r64_t uij = 4.0 * epsilon * (std::pow(sigma2/r2, 6) - std::pow(sigma2/r2, 3));

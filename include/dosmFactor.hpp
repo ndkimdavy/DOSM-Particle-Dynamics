@@ -3,8 +3,9 @@
 
 #include "dosmBasic.hpp"
 #include "dosmParticle.hpp"
-#include "dosmLawLennardJones.hpp"
+#include "idosmLaw.hpp"
 #include "dosmParallel.hpp"
+#include <memory>
 #include <functional>
 
 namespace dosm
@@ -23,7 +24,7 @@ namespace dosm
 
 		private:
 			DosmParticleSnap dosmParticleSnap;
-			DosmLawLennardJones dosmLawLJ;
+			std::unique_ptr<IDosmLaw> idosmLaw;
 			DosmParallel<std::function<void(idx_t)>> dosmParallel;
 	};
 

@@ -1,4 +1,5 @@
 #include "dosmFactor.hpp"
+#include "dosmLawLennardJonesPeriodic.hpp"
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>
@@ -164,12 +165,19 @@ namespace dosm
 		DOSM_LOG_DEBUG("Factor::run() entered");
 
 		vector_t<DosmParticle>& particles = dosmParticleSnap.snaps.back().particles;
-		dosmLawLJ = DosmLawLennardJones(particles, 1.0, 1.0);
-		DosmLawLennardJones::Result result;
+		// idosmLaw = std::make_unique<DosmLawLennardJones>(particles, 1.0, 1.0);
+		idosmLaw = std::make_unique<DosmLawLennardJonesPeriodic>(particles, 1.0, 1.0, 50.0, 10.0);	
+		IDosmLaw::Result result;
 
 		dosmParallel.init();
-		dosmParallel.dispatch(1, [&](idx_t) { dosmLawLJ.kernel(&result); });
+		dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
 		dosmParallel.release();
+
+		if (result.particles == nullptr)
+		{
+			DOSM_LOG_ERROR("Kernel failed");
+			return;
+		}
 
 		particles = *result.particles;
 		DOSM_LOG_INFO("Lennard-Jones total energy = " + std::to_string(result.energy));
