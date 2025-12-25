@@ -1,14 +1,26 @@
 #include "dosmFactor.hpp"
+#include "dosmLawVelocityVerlet.hpp"
 #include "dosmLawLennardJonesPeriodic.hpp"
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>
+
+#define DOSM_SEED        42
+#define DOSM_SIGMA       1.0
+#define DOSM_EPSILON     1.0
+#define DOSM_BOX_LENGTH  50.0
+#define DOSM_RAY_CUT     10.0
+#define DOSM_MASS        1.0
+#define DOSM_CHARGE      0.0
+#define DOSM_DT          0.01
+#define DOSM_STEPS       3
 
 namespace dosm
 {
 
 	DosmFactor::DosmFactor(const str_t& file)
 	{
+		std::srand(DOSM_SEED);
 		loadFile(file);
 	}
 
@@ -24,17 +36,17 @@ namespace dosm
 		in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 		vector_t<DosmParticle> particles;
-		const r64_t mass   = 1.0;
-		const r64_t charge = 0.0;
-
 		i32_t type;
 		r64_t x, y, z;
 		while (in >> type >> x >> y >> z)
 		{
-			DosmParticle particle(mass, charge);
+			DosmParticle particle(DOSM_MASS, DOSM_CHARGE);
 			particle.position(0) = x;
 			particle.position(1) = y;
 			particle.position(2) = z;
+			particle.velocity(0) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
+			particle.velocity(1) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
+			particle.velocity(2) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
 			particles.push_back(particle);
 		}
 
@@ -52,7 +64,6 @@ namespace dosm
 	{
 		const str_t csvFile = "dosmdata.csv";
 		const str_t pdbFile = "dosmvisual.pdb";
-		const r64_t boxLength = 25.0;
 
 		std::ofstream csv(csvFile);
 		if (!csv)
@@ -87,7 +98,7 @@ namespace dosm
 				line,
 				sizeof(line),
 				"CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1\n",
-				boxLength, boxLength, boxLength
+				DOSM_BOX_LENGTH, DOSM_BOX_LENGTH, DOSM_BOX_LENGTH
 				);
 		pdb << line;
 
@@ -109,7 +120,6 @@ namespace dosm
 			for (idx_t j = 0; j < n; ++j)
 			{
 				const DosmParticle& particle = snap.particles[j];
-				const r64_t force = particle.force.norm();
 
 				snprintf(
 						line,
@@ -129,7 +139,7 @@ namespace dosm
 						particle.force(0),
 						particle.force(1),
 						particle.force(2),
-						force,
+						particle.force.norm(),
 						particle.energy
 						);
 				csv << line;
@@ -137,14 +147,17 @@ namespace dosm
 				snprintf(
 						line,
 						sizeof(line),
-						"ATOM  %5d  X   SIM %4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n",
+						"HETATM%5d  %-3.3s %-3.3s %4d    %8.3f%8.3f%8.3f%6.2f%6.2f           %.2s\n",
 						j + 1,
+						"X",
+						"SIM",
 						1,
 						particle.position(0),
 						particle.position(1),
 						particle.position(2),
-						force,              
-						particle.energy    
+						1.00,
+						0.00,
+						"X"
 						);
 
 				pdb << line;
@@ -159,29 +172,29 @@ namespace dosm
 		DOSM_LOG_INFO("Generated outputs: " + csvFile + ", " + pdbFile);
 	}
 
-
 	void DosmFactor::run(void)
 	{
 		DOSM_LOG_DEBUG("Factor::run() entered");
 
-		vector_t<DosmParticle>& particles = dosmParticleSnap.snaps.back().particles;
-		// idosmLaw = std::make_unique<DosmLawLennardJones>(particles, 1.0, 1.0);
-		idosmLaw = std::make_unique<DosmLawLennardJonesPeriodic>(particles, 1.0, 1.0, 50.0, 10.0);	
 		IDosmLaw::Result result;
+		DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
+		for (auto& p : currSnap.particles)
+			p.mass = DOSM_MASS;
+
+		auto dosmLawLJP = std::make_unique<DosmLawLennardJonesPeriodic>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
 		dosmParallel.init();
-		dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
-		dosmParallel.release();
 
-		if (result.particles == nullptr)
+		for (idx_t step = 1; step < DOSM_STEPS; ++step)
 		{
-			DOSM_LOG_ERROR("Kernel failed");
-			return;
+			idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT);
+			dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
+
+			dosmParticleSnap.snaps.push_back(currSnap);
+			DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS);
 		}
 
-		particles = *result.particles;
-		DOSM_LOG_INFO("Lennard-Jones total energy = " + std::to_string(result.energy));
-
+		dosmParallel.release();
 		outFile();
 
 		DOSM_LOG_INFO("Factor::run() done");

@@ -12,7 +12,8 @@ namespace dosm
 			struct Result
 			{
 				r64_t energy = 0.0;    
-				vector_t<DosmParticle>* particles = nullptr; 
+				vector_t<DosmParticle>* particles = nullptr;
+				DosmParticleSnap::Snap* snap =  nullptr;
 			};
 
 			virtual ~IDosmLaw(void) = default;

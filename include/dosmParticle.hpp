@@ -29,9 +29,3 @@ namespace dosm
 }
 
 #endif // DOSM_PARTICLE_HPP
-
-
-
-
-
-

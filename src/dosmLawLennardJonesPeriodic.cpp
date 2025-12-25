@@ -2,7 +2,7 @@
 
 namespace dosm
 {
-	DosmLawLennardJonesPeriodic::DosmLawLennardJonesPeriodic(vector_t<DosmParticle> particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
+	DosmLawLennardJonesPeriodic::DosmLawLennardJonesPeriodic(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
 		DosmLawLennardJones(particles, sigma, epsilon)  
 	{
 		this->boxLength = boxLength;
@@ -66,7 +66,7 @@ namespace dosm
 					particles[j].energy += 0.5 * uij;
 				}
 
-				DOSM_PROGRESS("Lennard-Jones", i + 1, n);
+				// DOSM_PROGRESS("Lennard-Jones Periodic", i + 1, n);
 			}
 
 		result->energy    = energy;

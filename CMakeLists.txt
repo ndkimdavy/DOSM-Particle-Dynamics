@@ -57,7 +57,8 @@ FetchContent_MakeAvailable(raylib)
 			src/dosmFactor.cpp
 			src/dosmLawBasic.cpp
 			src/dosmLawLennardJones.cpp 
-			src/dosmLawLennardJonesPeriodic.cpp 
+			src/dosmLawLennardJonesPeriodic.cpp
+			src/dosmLawVelocityVerlet.cpp 
 			src/dosmVisualRaylib.cpp
 		)
 

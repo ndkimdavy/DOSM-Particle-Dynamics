@@ -3,11 +3,11 @@
 
 namespace dosm
 {
-	DosmLawLennardJones::DosmLawLennardJones(vector_t<DosmParticle> particles, r64_t sigma, r64_t epsilon)
+	DosmLawLennardJones::DosmLawLennardJones(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon):
+		particles(particles)
 	{
 		this->sigma = sigma;
 		this->epsilon = epsilon;
-		this->particles = particles;
 	}
 
 	void DosmLawLennardJones::kernel(Result* result)
@@ -55,7 +55,7 @@ namespace dosm
 				particles[j].energy += 0.5 * uij;
 			}
 
-			DOSM_PROGRESS("Lennard-Jones", i + 1, n);
+			// DOSM_PROGRESS("Lennard-Jones", i + 1, n);
 		}
 
 		result->energy    = energy;
