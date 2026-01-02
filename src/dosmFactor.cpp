@@ -9,11 +9,11 @@
 #define DOSM_SIGMA       1.0
 #define DOSM_EPSILON     1.0
 #define DOSM_BOX_LENGTH  50.0
-#define DOSM_RAY_CUT     10.0
-#define DOSM_MASS        1.0
+#define DOSM_RAY_CUT     15.0
+#define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          0.01
-#define DOSM_STEPS       3
+#define DOSM_STEPS       1000
 
 namespace dosm
 {
@@ -44,19 +44,12 @@ namespace dosm
 			particle.position(0) = x;
 			particle.position(1) = y;
 			particle.position(2) = z;
-			particle.velocity(0) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
-			particle.velocity(1) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
-			particle.velocity(2) = 0.1 * (r64_t(std::rand()) / RAND_MAX - 0.5);
+			particle.velocity(0) = particle.velocity(1) = particle.velocity(2) = 0.0;
 			particles.push_back(particle);
 		}
 
-		DosmParticleSnap::Snap snap0;
-		snap0.t = 0.0;
-		snap0.particles = particles;
-
 		dosmParticleSnap.snaps.clear();
-		dosmParticleSnap.snaps.push_back(snap0);
-
+		dosmParticleSnap.snaps.push_back(DosmParticleSnap::Snap{0.0, particles});
 		DOSM_LOG_INFO("Loaded " + std::to_string(particles.size()) + " particles");
 	}
 
@@ -84,9 +77,10 @@ namespace dosm
 		snprintf(
 				line,
 				sizeof(line),
-				"snap\tt\tid\tmass\tcharge\tx\ty\tz\tvx\tvy\tvz\tfx\tfy\tfz\tforce\tenergy\n"
+				"snap\tt\tid\tmass\tx\ty\tz\tpx\tpy\tpz\tfx\tfy\tfz\tEk\tEp\tT\n"
 				);
 		csv << line;
+
 
 		snprintf(line, sizeof(line), "HEADER    DOSM PARTICLES\n");
 		pdb << line;
@@ -107,7 +101,14 @@ namespace dosm
 		for (idx_t i = 0; i < nSnap; ++i)
 		{
 			const auto& snap = dosmParticleSnap.snaps[i];
+			const idx_t N = snap.particles.size();
+			const idx_t Ndl = 3 * N - 3;
+			constexpr r64_t CONSTANT_R = 0.00199;
+			r64_t Ec = 0.0;
+			for (const auto& particle : snap.particles)
+				Ec += particle.k_energy;
 
+			r64_t T = (Ndl > 0) ? (Ec / (Ndl * CONSTANT_R)) : 0.0;
 			snprintf(
 					line,
 					sizeof(line),
@@ -124,23 +125,17 @@ namespace dosm
 				snprintf(
 						line,
 						sizeof(line),
-						"%d\t%.6f\t%d\t%.3f\t%.3f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n",
+						"%d\t%.6f\t%d\t%.3f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n",
 						i,
 						snap.t,
 						j,
 						particle.mass,
-						particle.charge,
-						particle.position(0),
-						particle.position(1),
-						particle.position(2),
-						particle.velocity(0),
-						particle.velocity(1),
-						particle.velocity(2),
-						particle.force(0),
-						particle.force(1),
-						particle.force(2),
-						particle.force.norm(),
-						particle.energy
+						particle.position(0), particle.position(1), particle.position(2),
+						particle.momentum(0), particle.momentum(1), particle.momentum(2),
+						particle.force(0),    particle.force(1),    particle.force(2),
+						particle.k_energy,
+						particle.p_energy,
+						T
 						);
 				csv << line;
 
@@ -152,9 +147,7 @@ namespace dosm
 						"X",
 						"SIM",
 						1,
-						particle.position(0),
-						particle.position(1),
-						particle.position(2),
+						particle.position(0), particle.position(1), particle.position(2),
 						1.00,
 						0.00,
 						"X"
@@ -179,21 +172,23 @@ namespace dosm
 		IDosmLaw::Result result;
 		DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
-		for (auto& p : currSnap.particles)
-			p.mass = DOSM_MASS;
+		for (auto& particle : currSnap.particles)
+			particle.mass = DOSM_MASS;
 
+		auto dosmLawLJ = std::make_unique<DosmLawLennardJones>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
 		auto dosmLawLJP = std::make_unique<DosmLawLennardJonesPeriodic>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
 		dosmParallel.init();
-
+		idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
+		dosmParticleSnap.snaps[0] = currSnap;
 		for (idx_t step = 1; step < DOSM_STEPS; ++step)
 		{
-			idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT);
 			dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
-
 			dosmParticleSnap.snaps.push_back(currSnap);
 			DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS);
 		}
 
+		// dosmLawLJP->kernel(&result);
+		// dosmParticleSnap.snaps[0] = currSnap;
 		dosmParallel.release();
 		outFile();
 

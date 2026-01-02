@@ -15,21 +15,19 @@ namespace dosm
 		idx_t n = particles.size();
 
 		r64_t energy = 0.0;
-		for (idx_t i = 0; i < n; ++i)
+		for (auto& particle : particles)
 		{
-			particles[i].energy   = 0.0;
-			particles[i].force(0) = 0.0;
-			particles[i].force(1) = 0.0;
-			particles[i].force(2) = 0.0;
+			particle.p_energy = 0.0;
+			particle.force(0) = particle.force(1) = particle.force(2) = 0.0;
 		}
 
 		for (idx_t i = 0; i < n; ++i)
 		{
 			for (idx_t j = i + 1; j < n; ++j)
 			{
-				r64_t dx = particles[j].position(0) - particles[i].position(0);
-				r64_t dy = particles[j].position(1) - particles[i].position(1);
-				r64_t dz = particles[j].position(2) - particles[i].position(2);
+				r64_t dx = particles[i].position(0) - particles[j].position(0);
+				r64_t dy = particles[i].position(1) - particles[j].position(1);
+				r64_t dz = particles[i].position(2) - particles[j].position(2);
 				r64_t r2 = dx*dx + dy*dy + dz*dz;
 				if (r2 == 0.0) continue;
 				r64_t sigma2 = sigma * sigma;
@@ -51,14 +49,14 @@ namespace dosm
 				particles[j].force(2) -= fz;
 
 				// ui = uj = 1/2 uij (convention)
-				particles[i].energy += 0.5 * uij;
-				particles[j].energy += 0.5 * uij;
+				particles[i].p_energy+= 0.5 * uij;
+				particles[j].p_energy+= 0.5 * uij;
 			}
 
 			// DOSM_PROGRESS("Lennard-Jones", i + 1, n);
 		}
 
-		result->energy    = energy;
+		result->energy  = energy;
 		result->particles = &particles;
 
 	}

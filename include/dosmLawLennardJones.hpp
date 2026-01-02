@@ -10,7 +10,6 @@ namespace dosm
 		public:
 			DosmLawLennardJones(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon);
 			~DosmLawLennardJones(void) = default;
-
 			void kernel(Result* result) override;
 
 		protected:

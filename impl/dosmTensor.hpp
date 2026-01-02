@@ -32,6 +32,8 @@ namespace dosm {
 	template<typename T, idx_t... dims1> auto operator*(const tensor<T, dims1...>& X, T s);
 	template<typename T, idx_t... dims1> auto operator*(T s, const tensor<T, dims1...>& X);
 	template<typename T, idx_t... dims1, idx_t... dims2> auto operator*(const tensor<T, dims1...>& X, const tensor<T, dims2...>& Y);
+	template<typename T, idx_t... dims1> auto operator/(const tensor<T, dims1...>& X, T s);
+	template<typename T, idx_t... dims1> auto operator/(T s, const tensor<T, dims1...>& X);
 	template<typename T> auto operator^(const tensor<T,3>& X, const tensor<T,3>& Y);
 	template<typename T, idx_t... dims1, idx_t... dims2> auto operator|(const tensor<T, dims1...>& X, const tensor<T, dims2...>& Y);
 	template<typename T, idx_t... dims1, idx_t... dims2> auto operator||(const tensor<T, dims1...>& X, const tensor<T, dims2...>& Y);

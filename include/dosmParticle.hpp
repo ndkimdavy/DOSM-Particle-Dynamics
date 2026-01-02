@@ -8,9 +8,11 @@ namespace dosm
 	class DosmParticle : public DosmEntity
 	{
 		public:
-			r64_t energy;
+			r64_t p_energy;
+			r64_t k_energy;
+			tensor_t<r64_t, 3> momentum;
 			tensor_t<r64_t, 3> force;
-
+			
 			DosmParticle(void);
 			explicit DosmParticle(r64_t mass, r64_t charge);
 			virtual ~DosmParticle(void) = default;

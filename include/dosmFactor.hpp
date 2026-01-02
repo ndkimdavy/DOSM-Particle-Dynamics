@@ -15,7 +15,6 @@ namespace dosm
 		public:
 			DosmFactor(const str_t& file);
 			~DosmFactor(void) = default;
-
 			void run(void); 
 
 		private:

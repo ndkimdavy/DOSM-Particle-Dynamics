@@ -195,8 +195,8 @@ namespace dosm {
 				constexpr idx_t m = tensor<T, dims1...>::shape[1];
 				tensor<T, n> out;
 				Eigen::Map<const Eigen::Matrix<T, n, m>> x(X.data);
-				Eigen::Map<const Eigen::Matrix<T, m, 1>>                  y(Y.data);
-				Eigen::Map<Eigen::Matrix<T, n, 1>>                        o(out.data);
+				Eigen::Map<const Eigen::Matrix<T, m, 1>> y(Y.data);
+				Eigen::Map<Eigen::Matrix<T, n, 1>>       o(out.data);
 				o = x * y;
 				return out;
 			}
@@ -206,9 +206,9 @@ namespace dosm {
 				constexpr idx_t n2 = tensor<T, dims2...>::shape[0];
 				constexpr idx_t m2 = tensor<T, dims2...>::shape[1];
 				tensor<T, m2> out;
-				Eigen::Map<const Eigen::Matrix<T, 1, n1>>                   x(X.data);
+				Eigen::Map<const Eigen::Matrix<T, 1, n1>>  x(X.data);
 				Eigen::Map<const Eigen::Matrix<T, n2, m2>> y(Y.data);
-				Eigen::Map<Eigen::Matrix<T, 1, m2>>                         o(out.data);
+				Eigen::Map<Eigen::Matrix<T, 1, m2>>        o(out.data);
 				o = x * y;
 				return out;
 			}
@@ -233,6 +233,23 @@ namespace dosm {
 				o = x * y;
 				return out;
 			}
+		}
+
+	template<typename T, idx_t... dims1>
+		auto operator/(const tensor<T, dims1...>& X, T s)
+		{
+			tensor<T, dims1...> out;
+			constexpr idx_t rank = tensor<T, dims1...>::rank;
+			Eigen::TensorMap<Eigen::Tensor<const T, rank>> x(const_cast<T*>(X.data), dims1...);
+			Eigen::TensorMap<Eigen::Tensor<T, rank>>       o(out.data, dims1...);
+			o = x / s;
+			return out;
+		}
+
+	template<typename T, idx_t... dims1>
+		auto operator/(T s, const tensor<T, dims1...>& X)
+		{
+			return X / s;
 		}
 
 	template<typename T>

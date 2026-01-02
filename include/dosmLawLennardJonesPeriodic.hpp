@@ -10,7 +10,6 @@ namespace dosm
 		public:
 			DosmLawLennardJonesPeriodic(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut);
 			~DosmLawLennardJonesPeriodic(void) = default;
-
 			void kernel(Result* result) override;
 
 		protected:
