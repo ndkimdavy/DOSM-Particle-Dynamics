@@ -5,6 +5,8 @@
 #define T0               300.0
 #define RANDOM_UNIT()    (rand() / (r64_t)RAND_MAX)
 #define RANDOM_SIGN()    ((RANDOM_UNIT() < 0.5) ? -1.0 : 1.0)
+#define GAMMA 0.01
+#define STEP_THERMO 10
 
 namespace dosm
 {
@@ -19,6 +21,8 @@ namespace dosm
 
 	void DosmLawVelocityVerlet::kernel(Result* result)
 	{
+		static idx_t stepCount = 0;
+
 		// F(t)
 		idosmLaw.kernel(result);
 
@@ -51,7 +55,34 @@ namespace dosm
 		// T
 		idx_t N   = snap.particles.size();
 		idx_t Ndl = 3 * N - 3;
-		r64_t T   = Ek / (Ndl * CONSTANT_R);
+		r64_t T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
+
+		// THERMO BERENDSEN
+		stepCount++;
+
+		if (stepCount % STEP_THERMO == 0 && T > 0.0)
+		{
+			r64_t lambda = 1.0 + GAMMA * (T0 / T - 1.0);
+
+			for (auto& particle : snap.particles)
+				particle.momentum = particle.momentum * lambda;
+
+			tensor_t<r64_t, 3> pc = {0.0, 0.0, 0.0};
+			for (auto& particle : snap.particles)
+				pc = pc + particle.momentum;
+
+			for (auto& particle : snap.particles)
+				particle.momentum = particle.momentum - pc / (r64_t)N;
+
+			Ek = 0.0;
+			for (auto& particle : snap.particles)
+			{
+				particle.k_energy = (1.0 / (2.0 * CONVERSION_FORCE * particle.mass)) * (particle.momentum(0) * particle.momentum(0) + particle.momentum(1) * particle.momentum(1) + particle.momentum(2) * particle.momentum(2));
+				Ek += particle.k_energy;
+			}
+
+			T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
+		}
 
 		snap.t = snap.t + dt;
 	}
