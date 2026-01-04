@@ -8,12 +8,12 @@
 #define DOSM_SEED        42
 #define DOSM_SIGMA       1.0
 #define DOSM_EPSILON     1.0
-#define DOSM_BOX_LENGTH  50.0
-#define DOSM_RAY_CUT     15.0
+#define DOSM_BOX_LENGTH  10.0
+#define DOSM_RAY_CUT     2.5
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          0.01
-#define DOSM_STEPS       1000
+#define DOSM_STEPS       5000
 
 namespace dosm
 {
@@ -159,7 +159,7 @@ namespace dosm
 			snprintf(line, sizeof(line), "ENDMDL\n");
 			pdb << line;
 
-			DOSM_PROGRESS("Generating output", i + 1, nSnap);
+			DOSM_PROGRESS("Generating output", i + 1, nSnap, -1);
 		}
 
 		DOSM_LOG_INFO("Generated outputs: " + csvFile + ", " + pdbFile);
@@ -180,13 +180,14 @@ namespace dosm
 		dosmParallel.init();
 		idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
 		dosmParticleSnap.snaps[0] = currSnap;
+		std::time_t t0 = std::time(nullptr);
 		for (idx_t step = 1; step < DOSM_STEPS; ++step)
 		{
 			dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
 			dosmParticleSnap.snaps.push_back(currSnap);
-			DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS);
+			dosm::ui64_t elapsed = static_cast<dosm::ui64_t>(std::time(nullptr) - t0);
+			DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS, elapsed);
 		}
-
 		// dosmLawLJP->kernel(&result);
 		// dosmParticleSnap.snaps[0] = currSnap;
 		dosmParallel.release();

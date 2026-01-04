@@ -64,7 +64,7 @@ namespace dosm
 					particles[j].p_energy += 0.5 * uij;
 				}
 
-				// DOSM_PROGRESS("Lennard-Jones Periodic", i + 1, n);
+				// DOSM_PROGRESS("Lennard-Jones Periodic", i + 1, n, -);
 			}
 
 		result->energy    = energy;

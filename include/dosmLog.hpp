@@ -34,15 +34,30 @@ namespace dosm
 			}                                                                                                         \
 			os << msg << std::endl;                                                                                   \
 		}                                                                                                            \
-	} while (0)
+	} while (0)                                                                                                     \
 
-
-#define DOSM_PROGRESS(label, done, total)                                                                                     \
-	do {                                                                                                                       \
-		ui8_t pct  = (100 * (done)) / (total);                                                                                  \
-		std::cout << "\r[DOSM] " + str_t(label) + ": " + std::to_string((done)==(total) ? 100 : pct) + "%" << std::flush; \
-		if ((done) == (total)) std::cout << std::endl;                                                                          \
-	} while (0)                                                                                                                \
+#define DOSM_PROGRESS(label, done, total, elapsed)                                                                                        \
+	do {                                                                                                                                   \
+		if ((total) == 0) break;                                                                                                            \
+		dosm::ui8_t pct = static_cast<dosm::ui8_t>((100 * (done)) / (total));                                                               \
+		std::cout << "\r[DOSM] " << dosm::str_t(label) << ": " << dosm::str_t(((done) == (total)) ? "100" : std::to_string(pct)) << "%";    \
+		if ((elapsed) >= 0)                                                                                                                 \
+		{                                                                                                                                   \
+			dosm::ui64_t t = static_cast<dosm::ui64_t>(elapsed);                                                                             \
+			dosm::ui64_t display = 0;                                                                                                        \
+			if ((done) > 0 && (done) < (total)) display = t * static_cast<dosm::ui64_t>((total) - (done)) / static_cast<dosm::ui64_t>(done); \
+			else display = t;                                                                                                                \
+			dosm::ui64_t h = display / 3600;                                                                                                 \
+			dosm::ui64_t m = (display % 3600) / 60;                                                                                          \
+			dosm::ui64_t s = display % 60;                                                                                                   \
+			std::cout << " | "                                                                                                               \
+			<< (h < 10 ? "0" : "") << h << ":"                                                                                               \
+			<< (m < 10 ? "0" : "") << m << ":"                                                                                               \
+			<< (s < 10 ? "0" : "") << s;                                                                                                     \
+		}                                                                                                                                   \
+		std::cout << std::flush;                                                                                                            \
+		if ((done) == (total)) std::cout << std::endl;                                                                                      \
+	} while (0)                                                                                                                            \
 
 #else
 #define DOSM_LOG(LVL, msg) do {} while (0)
@@ -54,10 +69,5 @@ namespace dosm
 #define DOSM_LOG_DEBUG(msg) DOSM_LOG(dosm::logLVL::DEBUG, msg)
 
 #endif // DOSM_LOG_HPP
-
-
-
-
-
 
 

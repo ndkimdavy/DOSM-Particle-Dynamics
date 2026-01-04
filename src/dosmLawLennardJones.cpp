@@ -53,7 +53,7 @@ namespace dosm
 				particles[j].p_energy+= 0.5 * uij;
 			}
 
-			// DOSM_PROGRESS("Lennard-Jones", i + 1, n);
+			// DOSM_PROGRESS("Lennard-Jones", i + 1, n, -1);
 		}
 
 		result->energy  = energy;
