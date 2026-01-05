@@ -6,14 +6,14 @@
 #include <stdexcept>
 
 #define DOSM_SEED        42
-#define DOSM_SIGMA       1.0
-#define DOSM_EPSILON     1.0
-#define DOSM_BOX_LENGTH  10.0
-#define DOSM_RAY_CUT     2.5
+#define DOSM_SIGMA       3.0
+#define DOSM_EPSILON     0.2
+#define DOSM_BOX_LENGTH  42.0
+#define DOSM_RAY_CUT     10.0
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
-#define DOSM_DT          0.01
-#define DOSM_STEPS       5000
+#define DOSM_DT          1
+#define DOSM_STEPS       3000
 
 namespace dosm
 {
