@@ -13,7 +13,7 @@
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1
-#define DOSM_STEPS       3000
+#define DOSM_STEPS       8000
 
 namespace dosm
 {
@@ -149,7 +149,7 @@ namespace dosm
 						1,
 						particle.position(0), particle.position(1), particle.position(2),
 						1.00,
-						0.00,
+						particle.p_energy,
 						"X"
 						);
 

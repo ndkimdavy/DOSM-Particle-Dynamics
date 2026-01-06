@@ -29,6 +29,14 @@ This generates:
 - `dosmdata.csv` — numerical data per time step (positions, momenta, energies, temperature)
 - `dosmvisual.pdb` — trajectory file for visualization (e.g. with VMD)
 
+## Visualization
+
+Visualization of particle motion based on simulation data,
+computed by a lightweight C++ engine and exported in PDB format for analysis with VMD.
+
+![DOSM simulation preview](assets/v1.gif)
+![DOSM simulation preview](assets/v2.gif)
+
 ## Project status
 
 This project is a work in progress.
