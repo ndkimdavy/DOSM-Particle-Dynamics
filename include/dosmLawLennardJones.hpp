@@ -5,18 +5,18 @@
 
 namespace dosm
 {
-	class DosmLawLennardJones : public IDosmLaw
-	{
-		public:
-			DosmLawLennardJones(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon);
-			~DosmLawLennardJones(void) = default;
-			void kernel(Result* result) override;
+    class DosmLawLennardJones : public IDosmLaw
+    {
+        public:
+            DosmLawLennardJones(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon);
+            ~DosmLawLennardJones(void) = default;
+            void kernel(Result* result) override;
 
-		protected:
-			vector_t<DosmParticle>& particles;
-			r64_t sigma;
-			r64_t epsilon;
-	};
+        protected:
+            vector_t<DosmParticle>& particles;
+            r64_t sigma;
+            r64_t epsilon;
+    };
 
 } // namespace dosm
 

@@ -172,6 +172,8 @@ namespace dosm
         DOSM_LOG_DEBUG("Factor::run() entered");
 
         IDosmLaw::Result result;
+        IDosmLaw::Plot plot;
+
         DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
         for (auto& particle : currSnap.particles)
@@ -183,16 +185,33 @@ namespace dosm
         idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
         dosmParticleSnap.snaps[0] = currSnap;
         auto t0 = std::chrono::steady_clock::now();
+
         for (idx_t step = 1; step < DOSM_STEPS; ++step)
         {
+            if(step == 1)
+            {
+                plot.x.clear();
+                plot.y.clear();
+                plot.z.clear();
+                result.plot = &plot;
+            } 
+            else 
+                result.plot = nullptr;
+
             dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
             dosmParticleSnap.snaps.push_back(currSnap);
             dosm::ui64_t elapsed = static_cast<dosm::ui64_t>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0).count());
             DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS, elapsed);
         }
+
         // dosmLawLJP->kernel(&result);
         // dosmParticleSnap.snaps[0] = currSnap;
         dosmParallel.release();
+
+        std::ofstream out("dosmplot.csv");
+        for (idx_t k = 0; k < (idx_t)plot.x.size(); ++k)
+            out << plot.x[k] << "\t" << plot.y[k] << "\n";
+
         outFile();
 
         DOSM_LOG_INFO("Factor::run() done");

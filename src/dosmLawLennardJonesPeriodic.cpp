@@ -50,6 +50,13 @@ namespace dosm
                     r64_t uij = 4.0 * epsilon * (_invR12 - _invR6);
                     energy += uij;
 
+                    if (result->plot != nullptr)
+                    {
+                        r64_t r = std::sqrt(r2);
+                        result->plot->x.push_back(r / sigma);
+                        result->plot->y.push_back(uij);
+                    }
+
                     r64_t oij = 48.0 * epsilon * (_invR12 - 0.5 * _invR6);
                     r64_t fx = oij * (dx/r2);
                     r64_t fy = oij * (dy/r2);
