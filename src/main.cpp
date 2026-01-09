@@ -2,8 +2,8 @@
 
 int main(int argc, char** argv)
 {
-	dosm::DosmFactor dosmFactor("doc/particule");
-	dosmFactor.run();
-	return 0;
+    dosm::DosmFactor dosmFactor("doc/particule");
+    dosmFactor.run();
+    return 0;
 }
 

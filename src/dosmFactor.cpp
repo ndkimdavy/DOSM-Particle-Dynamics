@@ -1,7 +1,6 @@
 #include "dosmFactor.hpp"
-#include "dosmLawVelocityVerlet.hpp"
-#include "dosmLawLennardJonesPeriodic.hpp"
-#include "dosmParallelCPU.hpp"
+#include "dosmLawVV.hpp"
+#include "dosmLawLJP.hpp"
 #include "dosmSocketPublisher.hpp"
 
 #include <cstdio>
@@ -105,8 +104,8 @@ namespace dosm
         for (idx_t i = 0; i < nSnap; ++i)
         {
             const auto& snap = dosmParticleSnap.snaps[i];
-            const idx_t N = snap.particles.size();
-            const idx_t Ndl = 3 * N - 3;
+            const idx_t ntasks = snap.particles.size();
+            const idx_t Ndl = 3 * ntasks - 3;
             constexpr r64_t CONSTANT_R = 0.00199;
             r64_t Ec = 0.0;
             for (const auto& particle : snap.particles)
@@ -181,13 +180,11 @@ namespace dosm
         for (auto& particle : currSnap.particles)
             particle.mass = DOSM_MASS;
 
-        auto dosmLawLJ = std::make_unique<DosmLawLennardJones>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
-        auto dosmLawLJP = std::make_unique<DosmLawLennardJonesPeriodic>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
-        idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
+        auto dosmLawLJ = std::make_unique<DosmLawLJ>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
+        auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
+        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
         dosmParticleSnap.snaps[0] = currSnap;
 
-        idosmParallel = std::make_unique<DosmParallelCPU>(1);
-        idosmParallel->init();
         idosmSocket = std::make_unique<DosmSocketPublisher>("127.0.0.1", (ui16_t)5555);
         idosmSocket->init();
 
@@ -199,7 +196,7 @@ namespace dosm
             result.plot = &plot;
             result.idosmSocket = idosmSocket.get();
 
-            idosmParallel->dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
+            idosmLaw->kernel(&result);
 
             dosmParticleSnap.snaps.push_back(currSnap);
 
@@ -208,7 +205,6 @@ namespace dosm
         }
 
         idosmSocket->release();
-        idosmParallel->release();
 
         outFile();
 

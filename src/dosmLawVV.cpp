@@ -1,4 +1,4 @@
-#include "dosmLawVelocityVerlet.hpp"
+#include "dosmLawVV.hpp"
 
 #define CONVERSION_FORCE (0.0001 * 4.186)
 #define CONSTANT_R       0.00199
@@ -10,7 +10,7 @@
 
 namespace dosm
 {
-    DosmLawVelocityVerlet::DosmLawVelocityVerlet(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength):
+    DosmLawVV::DosmLawVV(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength):
         idosmLaw(idosmLaw), 
         snap(snap)
     {
@@ -19,7 +19,7 @@ namespace dosm
         init();
     }
 
-    void DosmLawVelocityVerlet::kernel(Result* result)
+    void DosmLawVV::kernel(Result* result)
     {
         if (!result) return;
 
@@ -89,7 +89,7 @@ namespace dosm
         snap.t = snap.t + dt;
     }
 
-    void DosmLawVelocityVerlet::init()
+    void DosmLawVV::init()
     {
         idx_t N   = snap.particles.size();
         idx_t Ndl = 3 * N - 3;

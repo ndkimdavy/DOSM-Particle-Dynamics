@@ -1,10 +1,10 @@
-#include "dosmLawLennardJonesPeriodic.hpp"
+#include "dosmLawLJP.hpp"
 #include "idosmSocket.hpp" 
 
 namespace dosm
 {
-    DosmLawLennardJonesPeriodic::DosmLawLennardJonesPeriodic(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
-        DosmLawLennardJones(particles, sigma, epsilon)  
+    DosmLawLJP::DosmLawLJP(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
+        DosmLawLJ(particles, sigma, epsilon)  
     {
         this->boxLength = boxLength;
         this->rayCut = rayCut;
@@ -21,7 +21,7 @@ namespace dosm
                 }
     }
 
-    void DosmLawLennardJonesPeriodic::kernel(Result* result)
+    void DosmLawLJP::kernel(Result* result)
     {
         if(!result) return;
 

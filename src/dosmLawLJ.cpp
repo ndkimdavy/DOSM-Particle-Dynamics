@@ -1,16 +1,16 @@
-#include "dosmLawLennardJones.hpp"
+#include "dosmLawLJ.hpp"
 #include "idosmSocket.hpp" 
 
 namespace dosm
 {
-    DosmLawLennardJones::DosmLawLennardJones(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon):
+    DosmLawLJ::DosmLawLJ(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon):
         particles(particles)
     {
         this->sigma = sigma;
         this->epsilon = epsilon;
     }
 
-    void DosmLawLennardJones::kernel(Result* result)
+    void DosmLawLJ::kernel(Result* result)
     {
         if(!result) return;
 

@@ -1,15 +1,15 @@
-#ifndef DOSM_LAW_VELOCITY_VERLET_HPP
-#define DOSM_LAW_VELOCITY_VERLET_HPP
+#ifndef DOSM_LAW_VV_HPP
+#define DOSM_LAW_VV_HPP
 
 #include "idosmLaw.hpp"
 
 namespace dosm
 {
-    class DosmLawVelocityVerlet : public IDosmLaw
+    class DosmLawVV : public IDosmLaw
     {
         public:
-            DosmLawVelocityVerlet(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength);
-            ~DosmLawVelocityVerlet(void) = default;
+            DosmLawVV(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength);
+            ~DosmLawVV(void) = default;
             void kernel(Result* result) override;
 
         private:
@@ -24,4 +24,4 @@ namespace dosm
 
 } // namespace dosm
 
-#endif // DOSM_LAW_VELOCITY_VERLET_HPP
+#endif // DOSM_LAW_VV_HPP
