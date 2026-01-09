@@ -6,22 +6,18 @@
 
 namespace dosm
 {
+    class IDosmSocket;
+
     class IDosmLaw
     {
         public:
-            struct Plot 
-            {
-                vector_t <r64_t> x;
-                vector_t <r64_t> y;
-                vector_t <r64_t> z;
-            };
-
             struct Result
             {
                 r64_t energy = 0.0;    
                 vector_t<DosmParticle>* particles = nullptr;
                 DosmParticleSnap::Snap* snap =  nullptr;
-                Plot* plot = nullptr; 
+                plot_t* plot = nullptr;
+                IDosmSocket* idosmSocket = nullptr;
             };
 
             virtual ~IDosmLaw(void) = default;

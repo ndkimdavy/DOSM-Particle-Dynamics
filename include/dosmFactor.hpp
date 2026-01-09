@@ -4,7 +4,8 @@
 #include "dosmBasic.hpp"
 #include "dosmParticle.hpp"
 #include "idosmLaw.hpp"
-#include "dosmParallel.hpp"
+#include "idosmParallel.hpp"
+#include "idosmSocket.hpp"
 #include <memory>
 #include <functional>
 
@@ -24,7 +25,8 @@ namespace dosm
         private:
             DosmParticleSnap dosmParticleSnap;
             std::unique_ptr<IDosmLaw> idosmLaw;
-            DosmParallel<std::function<void(idx_t)>> dosmParallel;
+            std::unique_ptr<IDosmParallel> idosmParallel;
+            std::unique_ptr<IDosmSocket> idosmSocket;
     };
 
 } // namespace dosm

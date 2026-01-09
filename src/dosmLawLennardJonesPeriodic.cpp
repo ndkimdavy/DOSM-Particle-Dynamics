@@ -1,4 +1,5 @@
 #include "dosmLawLennardJonesPeriodic.hpp"
+#include "idosmSocket.hpp" 
 
 namespace dosm
 {
@@ -22,6 +23,8 @@ namespace dosm
 
     void DosmLawLennardJonesPeriodic::kernel(Result* result)
     {
+        if(!result) return;
+
         idx_t n = particles.size();
 
         r64_t energy = 0.0;
@@ -50,11 +53,20 @@ namespace dosm
                     r64_t uij = 4.0 * epsilon * (_invR12 - _invR6);
                     energy += uij;
 
-                    if (result->plot != nullptr)
+                    r64_t r = std::sqrt(r2);
+                    if (result->plot)
                     {
-                        r64_t r = std::sqrt(r2);
                         result->plot->x.push_back(r / sigma);
                         result->plot->y.push_back(uij);
+
+                    }
+
+                    static idx_t counter = 0;
+                    if (result->idosmSocket && ((counter++ & 1023) == 0))
+                    {
+                        chr_t data[256];
+                        int len = snprintf(data, sizeof(data), "LJ\t%.17g\t%.17g\n", r / sigma, uij);
+                        if (len > 0) result->idosmSocket->send(data, (idx_t)len);
                     }
 
                     r64_t oij = 48.0 * epsilon * (_invR12 - 0.5 * _invR6);

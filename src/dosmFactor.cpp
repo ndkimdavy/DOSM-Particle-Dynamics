@@ -1,6 +1,8 @@
 #include "dosmFactor.hpp"
 #include "dosmLawVelocityVerlet.hpp"
 #include "dosmLawLennardJonesPeriodic.hpp"
+#include "dosmParallelCPU.hpp"
+#include "dosmSocketPublisher.hpp"
 
 #include <cstdio>
 #include <chrono>
@@ -15,7 +17,7 @@
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1
-#define DOSM_STEPS       10000
+#define DOSM_STEPS       100
 
 namespace dosm
 {
@@ -172,7 +174,7 @@ namespace dosm
         DOSM_LOG_DEBUG("Factor::run() entered");
 
         IDosmLaw::Result result;
-        IDosmLaw::Plot plot;
+        plot_t plot;
 
         DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
@@ -181,36 +183,32 @@ namespace dosm
 
         auto dosmLawLJ = std::make_unique<DosmLawLennardJones>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
         auto dosmLawLJP = std::make_unique<DosmLawLennardJonesPeriodic>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
-        dosmParallel.init();
         idosmLaw = std::make_unique<DosmLawVelocityVerlet>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
         dosmParticleSnap.snaps[0] = currSnap;
-        auto t0 = std::chrono::steady_clock::now();
 
+        idosmParallel = std::make_unique<DosmParallelCPU>(1);
+        idosmParallel->init();
+        idosmSocket = std::make_unique<DosmSocketPublisher>("127.0.0.1", (ui16_t)5555);
+        idosmSocket->init();
+
+        auto t0 = std::chrono::steady_clock::now();
         for (idx_t step = 1; step < DOSM_STEPS; ++step)
         {
-            if(step == 1)
-            {
-                plot.x.clear();
-                plot.y.clear();
-                plot.z.clear();
-                result.plot = &plot;
-            } 
-            else 
-                result.plot = nullptr;
+            plot.x.clear();
+            plot.y.clear();
+            result.plot = &plot;
+            result.idosmSocket = idosmSocket.get();
 
-            dosmParallel.dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
+            idosmParallel->dispatch(1, [&](idx_t) { idosmLaw->kernel(&result); });
+
             dosmParticleSnap.snaps.push_back(currSnap);
-            dosm::ui64_t elapsed = static_cast<dosm::ui64_t>(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0).count());
+
+            ui64_t elapsed = (ui64_t)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0).count();
             DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS, elapsed);
         }
 
-        // dosmLawLJP->kernel(&result);
-        // dosmParticleSnap.snaps[0] = currSnap;
-        dosmParallel.release();
-
-        std::ofstream out("dosmplot.csv");
-        for (idx_t k = 0; k < (idx_t)plot.x.size(); ++k)
-            out << plot.x[k] << "\t" << plot.y[k] << "\n";
+        idosmSocket->release();
+        idosmParallel->release();
 
         outFile();
 
