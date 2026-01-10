@@ -15,8 +15,8 @@
 #define DOSM_RAY_CUT     10.0
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
-#define DOSM_DT          1
-#define DOSM_STEPS       100
+#define DOSM_DT          1.0
+#define DOSM_STEPS       1000
 
 namespace dosm
 {
@@ -173,7 +173,6 @@ namespace dosm
         DOSM_LOG_DEBUG("Factor::run() entered");
 
         IDosmLaw::Result result;
-        plot_t plot;
 
         DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
@@ -184,22 +183,14 @@ namespace dosm
         auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
         idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
         dosmParticleSnap.snaps[0] = currSnap;
-
         idosmSocket = std::make_unique<DosmSocketPublisher>("127.0.0.1", (ui16_t)5555);
         idosmSocket->init();
-
         auto t0 = std::chrono::steady_clock::now();
         for (idx_t step = 1; step < DOSM_STEPS; ++step)
         {
-            plot.x.clear();
-            plot.y.clear();
-            result.plot = &plot;
             result.idosmSocket = idosmSocket.get();
-
             idosmLaw->kernel(&result);
-
             dosmParticleSnap.snaps.push_back(currSnap);
-
             ui64_t elapsed = (ui64_t)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0).count();
             DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS, elapsed);
         }

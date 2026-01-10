@@ -1,4 +1,5 @@
 #include "dosmLawVV.hpp"
+#include "idosmSocket.hpp"
 
 #define CONVERSION_FORCE (0.0001 * 4.186)
 #define CONSTANT_R       0.00199
@@ -84,6 +85,17 @@ namespace dosm
             }
 
             T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
+        }
+
+        static idx_t counter = 0;
+        if (result->idosmSocket && !(counter++ % 1))
+        {
+            const r64_t Ep   = result->energy;
+            const r64_t Etot = Ek + Ep;
+            chr_t data[256];
+            i32_t len = snprintf(data, sizeof(data), "VV\t%.17g\t%.17g\t%.17g\t%.17g\t%.17g\n", snap.t, Ek, Ep, Etot, T);
+            if (len > 0) 
+                result->idosmSocket->send(data, (idx_t)len);
         }
 
         snap.t = snap.t + dt;

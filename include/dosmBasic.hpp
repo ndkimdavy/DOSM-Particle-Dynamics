@@ -35,14 +35,6 @@ namespace dosm
 
     template<typename T> using vector_t = std::vector<T>;
 
-    struct Plot
-    {
-        vector_t<r64_t> x;
-        vector_t<r64_t> y;
-        vector_t<r64_t> z;
-    };
-    using plot_t = Plot;
-
 } // namespace dosm
 
 #endif // DOSM_BASIC_HPP

@@ -16,7 +16,6 @@ namespace dosm
                 r64_t energy = 0.0;    
                 vector_t<DosmParticle>* particles = nullptr;
                 DosmParticleSnap::Snap* snap =  nullptr;
-                plot_t* plot = nullptr;
                 IDosmSocket* idosmSocket = nullptr;
             };
 
