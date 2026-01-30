@@ -8,6 +8,7 @@
 #define RANDOM_SIGN()    ((RANDOM_UNIT() < 0.5) ? -1.0 : 1.0)
 #define GAMMA 0.01
 #define STEP_THERMO 10
+#define STEP_SOCKET 1
 
 namespace dosm
 {
@@ -23,8 +24,6 @@ namespace dosm
     void DosmLawVV::kernel(Result* result)
     {
         if (!result) return;
-
-        static idx_t stepCount = 0;
 
         // F(t)
         idosmLaw.kernel(result);
@@ -56,14 +55,12 @@ namespace dosm
         }
 
         // T
-        idx_t N   = snap.particles.size();
-        idx_t Ndl = 3 * N - 3;
+        const idx_t N   = snap.particles.size();
+        const idx_t Ndl = 3 * N - 3;
         r64_t T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
 
         // THERMO BERENDSEN
-        stepCount++;
-
-        if (stepCount % STEP_THERMO == 0 && T > 0.0)
+        if (stepCount++ % STEP_THERMO == 0 && T > 0.0)
         {
             r64_t lambda = 1.0 + GAMMA * (T0 / T - 1.0);
 
@@ -87,8 +84,8 @@ namespace dosm
             T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
         }
 
-        static idx_t counter = 0;
-        if (result->idosmSocket && !(counter++ % 1))
+        static idx_t socketCount = 0;
+        if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
         {
             const r64_t Ep   = result->energy;
             const r64_t Etot = Ek + Ep;
@@ -103,8 +100,8 @@ namespace dosm
 
     void DosmLawVV::init()
     {
-        idx_t N   = snap.particles.size();
-        idx_t Ndl = 3 * N - 3;
+        const idx_t N   = snap.particles.size();
+        const idx_t Ndl = 3 * N - 3;
 
         for (auto& particle : snap.particles)
         {
@@ -125,8 +122,8 @@ namespace dosm
         for (auto& particle : snap.particles)
             Ek_init += (1.0 / (2.0 * CONVERSION_FORCE * particle.mass)) * (particle.momentum(0) * particle.momentum(0) + particle.momentum(1) * particle.momentum(1) + particle.momentum(2) * particle.momentum(2));
 
-        r64_t RAPPORT = (Ndl * CONSTANT_R * T0) / Ek_init;
-        r64_t scale   = std::sqrt(RAPPORT);
+        const r64_t RAPPORT = (Ndl * CONSTANT_R * T0) / Ek_init;
+        const r64_t scale   = std::sqrt(RAPPORT);
 
         for (auto& particle : snap.particles)
             particle.momentum = particle.momentum * scale;

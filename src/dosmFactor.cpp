@@ -1,6 +1,6 @@
 #include "dosmFactor.hpp"
 #include "dosmLawVV.hpp"
-#include "dosmLawLJP.hpp"
+#include "dosmLawLJPNB.hpp"
 #include "dosmSocketPublisher.hpp"
 
 #include <cstdio>
@@ -16,7 +16,10 @@
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1.0
-#define DOSM_STEPS       1000
+#define DOSM_STEPS       10000
+#define DOSM_IP          "127.0.0.1"
+#define DOSM_PORT        5555
+
 
 namespace dosm
 {
@@ -181,9 +184,11 @@ namespace dosm
 
         auto dosmLawLJ = std::make_unique<DosmLawLJ>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
         auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
-        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJP, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
+        auto dosmLawLJPNB = std::make_unique<DosmLawLJPNB>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
+        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNB, currSnap, DOSM_DT, DOSM_BOX_LENGTH);
+
         dosmParticleSnap.snaps[0] = currSnap;
-        idosmSocket = std::make_unique<DosmSocketPublisher>("127.0.0.1", (ui16_t)5555);
+        idosmSocket = std::make_unique<DosmSocketPublisher>(DOSM_IP, (ui16_t)DOSM_PORT);
         idosmSocket->init();
         auto t0 = std::chrono::steady_clock::now();
         for (idx_t step = 1; step < DOSM_STEPS; ++step)

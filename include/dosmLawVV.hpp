@@ -20,6 +20,9 @@ namespace dosm
             DosmParticleSnap::Snap& snap;
             r64_t dt;
             r64_t boxLength;
+
+        private:
+            idx_t stepCount = 0;
     };
 
 } // namespace dosm

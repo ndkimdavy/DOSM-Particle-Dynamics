@@ -3,3 +3,4 @@ build/
 *.csv
 *.pdb
 *.pdf
+*.vscode

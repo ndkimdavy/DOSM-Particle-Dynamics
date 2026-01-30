@@ -44,6 +44,7 @@ FetchContent_MakeAvailable(eigen)
             src/dosmFactor.cpp
             src/dosmLawLJ.cpp 
             src/dosmLawLJP.cpp
+            src/dosmLawLJPNB.cpp
             src/dosmLawVV.cpp 
             src/dosmSocketPublisher.cpp
        )

@@ -1,6 +1,8 @@
 #include "dosmLawLJ.hpp"
 #include "idosmSocket.hpp" 
 
+#define STEP_SOCKET 1000
+
 namespace dosm
 {
     DosmLawLJ::DosmLawLJ(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon):
@@ -14,47 +16,47 @@ namespace dosm
     {
         if(!result) return;
 
-        idx_t n = particles.size();
+        const idx_t n = particles.size();
+        const r64_t sigma2 = sigma * sigma;
 
-        r64_t energy = 0.0;
         for (auto& particle : particles)
         {
             particle.p_energy = 0.0;
             particle.force(0) = particle.force(1) = particle.force(2) = 0.0;
         }
 
+        r64_t energy = 0.0;
         for (idx_t i = 0; i < n; ++i)
         {
             for (idx_t j = i + 1; j < n; ++j)
             {
-                r64_t dx = particles[i].position(0) - particles[j].position(0);
-                r64_t dy = particles[i].position(1) - particles[j].position(1);
-                r64_t dz = particles[i].position(2) - particles[j].position(2);
-                r64_t r2 = dx*dx + dy*dy + dz*dz;
+                const r64_t dx = particles[i].position(0) - particles[j].position(0);
+                const r64_t dy = particles[i].position(1) - particles[j].position(1);
+                const r64_t dz = particles[i].position(2) - particles[j].position(2);
+                const r64_t r2 = dx*dx + dy*dy + dz*dz;
                 if (r2 == 0.0) continue;
-                r64_t sigma2 = sigma * sigma;
 
-                r64_t _invR2  = sigma2 / r2;
-                r64_t _invR6  = _invR2 * _invR2 * _invR2;
-                r64_t _invR12 = _invR6 * _invR6;
+                const r64_t _invR2 = sigma2 / r2;
+                const r64_t _invR6 = _invR2 * _invR2 * _invR2;
+                const r64_t _invR12 = _invR6 * _invR6;
 
-                r64_t uij = 4.0 * epsilon * (_invR12 - _invR6);
+                const r64_t uij = 4.0 * epsilon * (_invR12 - _invR6);
                 energy += uij;
 
-                r64_t r = std::sqrt(r2);
-                static idx_t counter = 0;
-                if (result->idosmSocket && !(counter++ % 1000))
+                static idx_t socketCount = 0;
+                if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
                 {
+                    const r64_t r = std::sqrt(r2);
                     chr_t data[256];
                     i32_t len = snprintf(data, sizeof(data), "LJ\t%.17g\t%.17g\n", r / sigma, uij);
                     if (len > 0) 
                         result->idosmSocket->send(data, (idx_t)len);
                 }
 
-                r64_t oij = 48.0 * epsilon * (_invR12 - 0.5 * _invR6);
-                r64_t fx = oij * (dx/r2);
-                r64_t fy = oij * (dy/r2);
-                r64_t fz = oij * (dz/r2);
+                const r64_t oij = 48.0 * epsilon * (_invR12 - 0.5 * _invR6);
+                const r64_t fx = oij * (dx/r2);
+                const r64_t fy = oij * (dy/r2);
+                const r64_t fz = oij * (dz/r2);
 
                 particles[i].force(0) += fx;
                 particles[i].force(1) += fy;
@@ -72,10 +74,10 @@ namespace dosm
             // DOSM_PROGRESS("Lennard-Jones", i + 1, n, -1);
         }
 
-        result->energy  = energy;
+        result->energy = energy;
         result->particles = &particles;
-
     }
+
 
 } // namespace dosm
 

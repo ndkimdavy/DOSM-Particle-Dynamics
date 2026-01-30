@@ -1,0 +1,69 @@
+#!/bin/bash
+# dosmplot — live plots
+
+PORT=5555
+LJ_FILE="/tmp/lj.dat"
+VV_FILE="/tmp/vv.dat"
+TAIL_SIZE=4096
+SLEEP=1
+
+kill -9 $(jobs -p) 2>/dev/null
+pkill -f "nc.*${PORT}" 2>/dev/null
+pkill -f "gnuplot" 2>/dev/null
+
+ss -lunp | grep -q ":${PORT}" && echo "port ${PORT} busy" || echo "port ${PORT} free"
+
+: > "${LJ_FILE}"
+: > "${VV_FILE}"
+printf "0 0\n" >> "${LJ_FILE}"
+printf "0 0 0 0 0\n" >> "${VV_FILE}"
+
+(
+  nc -ul "${PORT}" | awk -F '\t' '
+    $1=="LJ" {print $2, $3 >> "'"${LJ_FILE}"'"; fflush("'"${LJ_FILE}"'"); next}
+    $1=="VV" {print $2, $3, $4, $5, $6 >> "'"${VV_FILE}"'"; fflush("'"${VV_FILE}"'"); next}
+  '
+) &
+
+gnuplot -persist <<EOF &
+set grid
+set key left top
+set xlabel 'r / σ'
+set ylabel 'Uij(r)'
+
+while (1) {
+  plot "< awk 'NF==2{print}' ${LJ_FILE} | tail -n ${TAIL_SIZE} | sort -g -k1,1" using 1:2 with lines title "LJ potentiel"
+  pause ${SLEEP}
+}
+EOF
+
+gnuplot -persist <<EOF &
+set grid
+set key left top
+set xlabel 't'
+set ylabel 'Energy'
+
+while (1) {
+  plot \
+    "< awk 'NF==5{print}' ${VV_FILE} | tail -n ${TAIL_SIZE}" using 1:2 with lines title "Ek", \
+    "< awk 'NF==5{print}' ${VV_FILE} | tail -n ${TAIL_SIZE}" using 1:3 with lines title "Ep", \
+    "< awk 'NF==5{print}' ${VV_FILE} | tail -n ${TAIL_SIZE}" using 1:4 with lines title "Etot"
+  pause ${SLEEP}
+}
+EOF
+
+gnuplot -persist <<EOF &
+set grid
+set key left top
+set xlabel 't'
+set ylabel 'Temperature'
+
+while (1) {
+  plot "< awk 'NF==5{print}' ${VV_FILE} | tail -n ${TAIL_SIZE}" using 1:5 with lines title "T"
+  pause ${SLEEP}
+}
+EOF
+
+wait
+
+unset TAIL_SIZE SLEEP PORT LJ_FILE VV_FILE
