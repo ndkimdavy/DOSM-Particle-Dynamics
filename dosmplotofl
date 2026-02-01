@@ -1,29 +1,11 @@
 #!/bin/bash
-# dosmplot — live plots
+# dosmplotofl — offline plots
 
 PORT=5555
-LJ_FILE="/tmp/lj.dat"
-VV_FILE="/tmp/vv.dat"
-TAIL_SIZE=$((1 * 2 ** 20))
+LJ_FILE="50000/lj.dat"
+VV_FILE="50000/vv.dat"
+TAIL_SIZE=$((1 * 2 ** 10))
 SLEEP=1
-
-kill -9 $(jobs -p) 2>/dev/null
-pkill -f "nc.*${PORT}" 2>/dev/null
-pkill -f "gnuplot" 2>/dev/null
-
-ss -lunp | grep -q ":${PORT}" && echo "port ${PORT} busy" || echo "port ${PORT} free"
-
-: > "${LJ_FILE}"
-: > "${VV_FILE}"
-printf "0 0\n" >> "${LJ_FILE}"
-printf "0 0 0 0 0\n" >> "${VV_FILE}"
-
-(
-  nc -ul "${PORT}" | awk -F '\t' '
-    $1=="LJ" {print $2, $3 >> "'"${LJ_FILE}"'"; fflush("'"${LJ_FILE}"'"); next}
-    $1=="VV" {print $2, $3, $4, $5, $6 >> "'"${VV_FILE}"'"; fflush("'"${VV_FILE}"'"); next}
-  '
-) &
 
 gnuplot -persist <<EOF &
 set grid

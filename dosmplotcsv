@@ -1,0 +1,46 @@
+#!/bin/bash
+# dosmplotcsv — plots from CSV
+
+CSV="dosmdata.csv"
+TMP_FILE="/tmp/dosmdata.dat"
+TAIL_SIZE=$((4 * 2 ** 30))
+SLEEP=1
+
+pkill -f "gnuplot" 2>/dev/null
+
+tail -n ${TAIL_SIZE} ${CSV} | awk -F '\t' 'NF==16 && NR>1 { if ($2!=prev){ print; prev=$2 } }' > "${TMP_FILE}"
+
+gnuplot -persist <<EOF &
+set grid
+set key left top
+set xlabel 't'
+set ylabel 'Energy'
+set datafile separator '\t'
+
+while (1) {
+  plot \
+    "${TMP_FILE}" using 2:14 with lines title "Ek", \
+    "${TMP_FILE}" using 2:15 with lines title "Ep", \
+    "${TMP_FILE}" using 2:(\$14+\$15) with lines title "Etot"
+  pause ${SLEEP}
+}
+EOF
+
+gnuplot -persist <<EOF &
+set grid
+set key left top
+set xlabel 't'
+set ylabel 'Temperature'
+set datafile separator '\t'
+
+while (1) {
+  plot "${TMP_FILE}" using 2:16 with lines title "T"
+  pause ${SLEEP}
+}
+EOF
+
+echo "Gnuplot running..."
+
+unset CSV TMP_FILE TAIL_SIZE SLEEP
+
+wait

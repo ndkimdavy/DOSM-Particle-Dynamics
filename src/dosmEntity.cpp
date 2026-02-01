@@ -18,4 +18,3 @@ namespace dosm
         velocity(0) = velocity(1) = velocity(2) = 0.0;
     }
 }
-

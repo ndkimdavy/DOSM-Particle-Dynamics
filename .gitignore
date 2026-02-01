@@ -1,4 +1,5 @@
 build/
+*.dat
 *.swp
 *.csv
 *.pdb
