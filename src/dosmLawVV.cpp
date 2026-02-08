@@ -15,9 +15,8 @@ namespace dosm
         DosmParticleSnap::Snap& snap, 
         r64_t dt, 
         r64_t boxLength, 
-        idx_t stepEvery) : idosmLaw(idosmLaw), snap(snap), dt(dt), boxLength(boxLength)
+        idx_t stepEvery) : idosmLaw(idosmLaw), snap(snap), dt(dt), boxLength(boxLength), stepEvery(stepEvery)
     {
-        this->stepEvery = stepEvery;
         init();
     }
 

@@ -21,8 +21,6 @@ namespace dosm
 
         protected:
             vector_t<vector_t<idx_t>> neighbor;
-
-        private:
             r64_t skin;
             idx_t stepEvery;
             idx_t stepCount = 0;
