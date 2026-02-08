@@ -8,7 +8,11 @@ namespace dosm
     class DosmLawVV : public IDosmLaw
     {
         public:
-            DosmLawVV(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength);
+            DosmLawVV(IDosmLaw& idosmLaw, 
+                DosmParticleSnap::Snap& snap, 
+                r64_t dt, 
+                r64_t boxLength,
+                idx_t stepEvery = 10);
             ~DosmLawVV(void) = default;
             void kernel(Result* result) override;
 
@@ -22,6 +26,7 @@ namespace dosm
             r64_t boxLength;
 
         private:
+            idx_t stepEvery;
             idx_t stepCount = 0;
     };
 

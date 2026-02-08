@@ -5,8 +5,11 @@
 
 namespace dosm
 {
-    DosmLawLJP::DosmLawLJP(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
-        DosmLawLJ(particles, sigma, epsilon)  
+    DosmLawLJP::DosmLawLJP(vector_t<DosmParticle>& particles, 
+        r64_t sigma, 
+        r64_t epsilon, 
+        r64_t boxLength, 
+        r64_t rayCut) : DosmLawLJ(particles, sigma, epsilon)  
     {
         this->boxLength = boxLength;
         this->rayCut = rayCut;

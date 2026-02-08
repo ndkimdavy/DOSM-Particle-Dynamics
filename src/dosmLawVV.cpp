@@ -7,17 +7,17 @@
 #define RANDOM_UNIT()    (rand() / (r64_t)RAND_MAX)
 #define RANDOM_SIGN()    ((RANDOM_UNIT() < 0.5) ? -1.0 : 1.0)
 #define GAMMA 0.01
-#define STEP_THERMO 10
 #define STEP_SOCKET 1
 
 namespace dosm
 {
-    DosmLawVV::DosmLawVV(IDosmLaw& idosmLaw, DosmParticleSnap::Snap& snap, r64_t dt, r64_t boxLength):
-        idosmLaw(idosmLaw), 
-        snap(snap)
+    DosmLawVV::DosmLawVV(IDosmLaw& idosmLaw, 
+        DosmParticleSnap::Snap& snap, 
+        r64_t dt, 
+        r64_t boxLength, 
+        idx_t stepEvery) : idosmLaw(idosmLaw), snap(snap), dt(dt), boxLength(boxLength)
     {
-        this->dt = dt;
-        this->boxLength = boxLength;
+        this->stepEvery = stepEvery;
         init();
     }
 
@@ -60,7 +60,7 @@ namespace dosm
         r64_t T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
 
         // THERMO BERENDSEN
-        if (stepCount++ % STEP_THERMO == 0 && T > 0.0)
+        if ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0) && T > 0.0)
         {
             r64_t lambda = 1.0 + GAMMA * (T0 / T - 1.0);
 

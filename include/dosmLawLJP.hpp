@@ -8,7 +8,11 @@ namespace dosm
     class DosmLawLJP : public DosmLawLJ
     {
         public:
-            DosmLawLJP(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut);
+            DosmLawLJP(vector_t<DosmParticle>& particles, 
+                r64_t sigma, 
+                r64_t epsilon, 
+                r64_t boxLength, 
+                r64_t rayCut);
             ~DosmLawLJP(void) = default;
             void kernel(Result* result) override;
 

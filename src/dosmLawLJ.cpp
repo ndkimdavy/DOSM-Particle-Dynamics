@@ -5,7 +5,9 @@
 
 namespace dosm
 {
-    DosmLawLJ::DosmLawLJ(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon):
+    DosmLawLJ::DosmLawLJ(vector_t<DosmParticle>& particles, 
+        r64_t sigma, 
+        r64_t epsilon):
         particles(particles)
     {
         this->sigma = sigma;

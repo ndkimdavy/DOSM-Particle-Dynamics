@@ -1,14 +1,21 @@
 #include "dosmLawLJPNB.hpp"
 #include "idosmSocket.hpp" 
 
-#define STEP_VERLET_EVERY 10
 #define STEP_SOCKET 10
 
 namespace dosm
 {
-    DosmLawLJPNB::DosmLawLJPNB(vector_t<DosmParticle>& particles, r64_t sigma, r64_t epsilon, r64_t boxLength, r64_t rayCut) : 
-        DosmLawLJP(particles, sigma, epsilon, boxLength, rayCut)
-    {}
+    DosmLawLJPNB::DosmLawLJPNB(vector_t<DosmParticle>& particles, 
+        r64_t sigma, 
+        r64_t epsilon, 
+        r64_t boxLength, 
+        r64_t rayCut, 
+        r64_t skin, 
+        idx_t stepEvery) : DosmLawLJP(particles, sigma, epsilon, boxLength, rayCut), skin(skin), stepEvery(stepEvery)
+    {
+        this->skin = skin;
+        this->stepEvery = stepEvery;
+    }
 
     void DosmLawLJPNB::kernel(Result* result)
     {
@@ -17,6 +24,9 @@ namespace dosm
         const idx_t n = particles.size();
         const r64_t rcut2  = rayCut * rayCut;
         const r64_t rcut3  = rayCut * rayCut * rayCut;
+        const r64_t rcutL  = rayCut + skin;
+        const r64_t rcutL2 = rcutL * rcutL;
+        const r64_t rcutL3 = rcutL * rcutL * rcutL;
         const r64_t sigma2 = sigma * sigma;
 
         for (auto& particle : particles)
@@ -26,11 +36,11 @@ namespace dosm
         }
 
         // Build neighbor list
-        if ((stepCount++ % STEP_VERLET_EVERY) == 0)
+        if ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0))
         {
             const r64_t volume  = boxLength * boxLength * boxLength;
             const r64_t density = (volume > 0.0) ? ((r64_t)n / volume) : 0.0;
-            const idx_t n_max_neighbor = ((idx_t)(density * 4.0 * M_PI * rcut3)) * 2;
+            const idx_t n_max_neighbor = ((idx_t)(density * 4.0 * M_PI * rcutL3)) * 2;
 
             neighbor.resize(n);
             for (idx_t i = 0; i < n; ++i)
@@ -49,7 +59,7 @@ namespace dosm
                         const r64_t dy = particles[i].position(1) - (particles[j].position(1) + image(1));
                         const r64_t dz = particles[i].position(2) - (particles[j].position(2) + image(2));
                         const r64_t r2 = dx*dx + dy*dy + dz*dz;
-                        if (r2 == 0.0 || r2 > rcut2) continue;
+                        if (r2 == 0.0 || r2 > rcutL2) continue;
 
                         idx_t ni = neighbor[i][0] + 1;
                         if (ni > n_max_neighbor) continue; 
