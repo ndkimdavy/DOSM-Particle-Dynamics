@@ -1,6 +1,7 @@
-#include "dosmFactor.hpp"
+#include "dosmMetric.hpp"
 #include "dosmLawVV.hpp"
 #include "dosmLawLJPNB.hpp"
+#include "dosmLawLJPNBCL_OMP.hpp"
 #include "dosmSocketPublisher.hpp"
 
 #include <cstdio>
@@ -13,11 +14,11 @@
 #define DOSM_EPSILON     0.2
 #define DOSM_BOX_LENGTH  42.0
 #define DOSM_RAY_CUT     10.0
-#define DOSM_SKIN        2.0
+#define DOSM_SKIN        0.0
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1.0
-#define DOSM_STEPS       5000
+#define DOSM_STEPS       2000
 #define DOSM_STEP_EVERY  10
 #define DOSM_IP          "127.0.0.1"
 #define DOSM_PORT        5555
@@ -26,19 +27,19 @@
 namespace dosm
 {
 
-    DosmFactor::DosmFactor(const str_t& file)
+    DosmMetric::DosmMetric(const str_t& file)
     {
         std::srand(DOSM_SEED);
         loadFile(file);
     }
 
-    void DosmFactor::loadFile(const str_t& file)
+    void DosmMetric::loadFile(const str_t& file)
     {
         std::ifstream in(file);
         if (!in)
         {
             DOSM_LOG_ERROR("Cannot open file: " + file);
-            throw std::runtime_error("dosmFactor: cannot open file");
+            throw std::runtime_error("dosmMetric: cannot open file");
         }
 
         in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -61,7 +62,7 @@ namespace dosm
         DOSM_LOG_INFO("Loaded " + std::to_string(particles.size()) + " particles");
     }
 
-    void DosmFactor::outFile(void)
+    void DosmMetric::outFile(void)
     {
         const str_t csvFile = "dosmdata.csv";
         const str_t pdbFile = "dosmvisual.pdb";
@@ -173,7 +174,7 @@ namespace dosm
         DOSM_LOG_INFO("Generated outputs: " + csvFile + ", " + pdbFile);
     }
 
-    void DosmFactor::run(void)
+    void DosmMetric::run(void)
     {
         DOSM_LOG_DEBUG("Factor::run() entered");
 
@@ -187,6 +188,7 @@ namespace dosm
         auto dosmLawLJ = std::make_unique<DosmLawLJ>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
         auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
         auto dosmLawLJPNB = std::make_unique<DosmLawLJPNB>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, DOSM_STEP_EVERY);
+        // auto dosmLawLJPNB_OMP = std::make_unique<DosmLawLJPNB_OMP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, DOSM_STEP_EVERY);
         idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNB, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
 
         dosmParticleSnap.snaps[0] = currSnap;

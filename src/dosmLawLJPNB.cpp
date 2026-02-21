@@ -14,16 +14,50 @@ namespace dosm
         idx_t stepEvery) : DosmLawLJP(particles, sigma, epsilon, boxLength, rayCut), skin(skin), stepEvery(stepEvery) 
     {}
 
+    void DosmLawLJPNB::buildNeighborList(
+        vector_t<vector_t<idx_t>>& neighbor,
+        const vector_t<DosmParticle>& particles,
+        const vector_t<tensor_t<r64_t, 3>>& images,
+        idx_t n,
+        r64_t limit,
+        idx_t maxNeighbor)
+    {
+        neighbor.resize(n);
+        for (idx_t i = 0; i < n; ++i)
+        {
+            neighbor[i].assign(1 + 2 * maxNeighbor, 0);
+            neighbor[i][0] = 0;
+        }
+
+        for (idx_t i = 0; i < n; ++i)
+            for (idx_t j = i + 1; j < n; ++j)
+                for (idx_t isym = 0; isym < (idx_t)images.size(); ++isym)
+                {
+                    const auto& image = images[isym];
+
+                    const r64_t dx = particles[i].position(0) - (particles[j].position(0) + image(0));
+                    const r64_t dy = particles[i].position(1) - (particles[j].position(1) + image(1));
+                    const r64_t dz = particles[i].position(2) - (particles[j].position(2) + image(2));
+                    const r64_t r2 = dx*dx + dy*dy + dz*dz;
+
+                    if (r2 == 0.0 || r2 > limit) continue;
+
+                    idx_t ni = neighbor[i][0] + 1;
+                    if (ni > maxNeighbor) continue;
+
+                    neighbor[i][0] = ni;
+                    const idx_t mi = 2 * ni - 1;
+                    neighbor[i][mi] = j;
+                    neighbor[i][mi + 1] = isym;
+                }
+    }
+
     void DosmLawLJPNB::kernel(Result* result)
     {
         if (!result) return;
 
         const idx_t n = particles.size();
-        const r64_t rcut2  = rayCut * rayCut;
-        const r64_t rcut3  = rayCut * rayCut * rayCut;
-        const r64_t rcutL  = rayCut + skin;
-        const r64_t rcutL2 = rcutL * rcutL;
-        const r64_t rcutL3 = rcutL * rcutL * rcutL;
+        const r64_t rcut2 = rayCut * rayCut;
         const r64_t sigma2 = sigma * sigma;
 
         for (auto& particle : particles)
@@ -35,37 +69,15 @@ namespace dosm
         // Build neighbor list
         if ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0))
         {
+            const r64_t rcutL = rayCut + skin;
+            const r64_t limit = rcutL * rcutL;
+            const r64_t rcutL3 = rcutL * rcutL * rcutL;
+
             const r64_t volume  = boxLength * boxLength * boxLength;
             const r64_t density = (volume > 0.0) ? ((r64_t)n / volume) : 0.0;
-            const idx_t n_max_neighbor = ((idx_t)(density * 4.0 * M_PI * rcutL3)) * 2;
+            const idx_t n_max_neighbor = ((idx_t)(density * (4.0/3.0) * M_PI * rcutL3)) * 2;
 
-            neighbor.resize(n);
-            for (idx_t i = 0; i < n; ++i)
-            {
-                neighbor[i].assign(1 + 2 * n_max_neighbor, 0);
-                neighbor[i][0] = 0;
-            }
-
-            for (idx_t i = 0; i < n; ++i)
-                for (idx_t j = i + 1; j < n; ++j)
-                    for (idx_t isym = 0; isym < (idx_t)images.size(); ++isym)
-                    {
-                        const auto& image = images[isym];
-
-                        const r64_t dx = particles[i].position(0) - (particles[j].position(0) + image(0));
-                        const r64_t dy = particles[i].position(1) - (particles[j].position(1) + image(1));
-                        const r64_t dz = particles[i].position(2) - (particles[j].position(2) + image(2));
-                        const r64_t r2 = dx*dx + dy*dy + dz*dz;
-                        if (r2 == 0.0 || r2 > rcutL2) continue;
-
-                        idx_t ni = neighbor[i][0] + 1;
-                        if (ni > n_max_neighbor) continue; 
-
-                        neighbor[i][0] = ni;
-                        const idx_t mi = 2 * ni - 1;
-                        neighbor[i][mi] = j;
-                        neighbor[i][mi + 1] = isym;
-                    }
+            buildNeighborList(neighbor, particles, images, n, limit, n_max_neighbor);
         }
 
         r64_t energy = 0.0;

@@ -1,9 +1,9 @@
-#include "dosmFactor.hpp"
+#include "dosmMetric.hpp"
 
 int main(int argc, char** argv)
 {
-    dosm::DosmFactor dosmFactor("doc/particule");
-    dosmFactor.run();
+    dosm::DosmMetric dosmMetric("doc/particule");
+    dosmMetric.run();
     return 0;
 }
 

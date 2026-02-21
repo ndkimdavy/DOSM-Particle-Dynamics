@@ -1,5 +1,5 @@
-#ifndef DOSM_FACTOR_HPP
-#define DOSM_FACTOR_HPP
+#ifndef DOSM_METRIC_HPP
+#define DOSM_METRIC_HPP
 
 #include "dosmBasic.hpp"
 #include "dosmParticle.hpp"
@@ -10,11 +10,11 @@
 
 namespace dosm
 {
-    class DosmFactor
+    class DosmMetric
     {
         public:
-            DosmFactor(const str_t& file);
-            ~DosmFactor(void) = default;
+            DosmMetric(const str_t& file);
+            ~DosmMetric(void) = default;
             void run(void); 
 
         private:
@@ -29,5 +29,5 @@ namespace dosm
 
 } // namespace dosm
 
-#endif // DOSM_FACTOR_HPP
+#endif // DOSM_METRIC_HPP
 

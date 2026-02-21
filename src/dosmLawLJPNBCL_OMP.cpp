@@ -1,22 +1,45 @@
-#include "dosmLawLJPNB_OMP.hpp"
-#include "idosmSocket.hpp" 
+#include "dosmLawLJPNBCL_OMP.hpp"
+#include "idosmSocket.hpp"
 #include <omp.h>
 
 #define STEP_SOCKET 10
 
 namespace dosm
 {
-    DosmLawLJPNB_OMP::DosmLawLJPNB_OMP(
-        vector_t<DosmParticle>& particles, 
+    DosmLawLJPNBCL_OMP::DosmLawLJPNBCL_OMP(vector_t<DosmParticle>& particles, 
         r64_t sigma, 
         r64_t epsilon, 
         r64_t boxLength, 
         r64_t rayCut, 
         r64_t skin, 
-        idx_t stepEvery) : DosmLawLJPNB(particles, sigma, epsilon, boxLength, rayCut, skin, stepEvery)
-    {}
+        idx_t dimX,
+        idx_t dimY,
+        idx_t stepEvery) : DosmLawLJPNB(particles, sigma, epsilon, boxLength, rayCut, skin, stepEvery), dimX(dimX), dimY(dimY)
+    {
+        subBoxLengthX = boxLength / (r64_t)dimX;
+        subBoxLengthY = boxLength / (r64_t)dimY;
+        grid.resize(dimX * dimY);
+    }
 
-    void DosmLawLJPNB_OMP::kernel(Result* result)
+    void DosmLawLJPNBCL_OMP::buildGrid(void)
+    {
+        for (auto& cell : grid)
+            cell.clear();
+
+        const idx_t n = particles.size();
+        for (idx_t i = 0; i < n; ++i)
+        {
+            const r64_t x = particles[i].position(0);
+            const r64_t y = particles[i].position(1);
+            const idx_t cellX = (idx_t)(x / subBoxLengthX);
+            const idx_t cellY = (idx_t)(y / subBoxLengthY);
+            const idx_t cellId = cellY * dimX + cellX;
+            grid[cellId].push_back(i);
+        }
+    }
+    
+
+    void DosmLawLJPNB::kernel(Result* result)
     {
         if (!result) return;
 
@@ -39,7 +62,7 @@ namespace dosm
         {
             const r64_t volume  = boxLength * boxLength * boxLength;
             const r64_t density = (volume > 0.0) ? ((r64_t)n / volume) : 0.0;
-            const idx_t n_max_neighbor = ((idx_t)(density * 4.0 * M_PI * rcutL3)) * 2;
+            const idx_t n_max_neighbor = ((idx_t)(density * (4.0/3.0) * M_PI * rcutL3)) * 2;
 
             neighbor.resize(n);
             for (idx_t i = 0; i < n; ++i)
@@ -71,15 +94,9 @@ namespace dosm
         }
 
         r64_t energy = 0.0;
-        #pragma omp parallel for reduction(+:energy) schedule(static)
         for (idx_t i = 0; i < n; ++i)
         {
-            r64_t fx_i = 0.0;
-            r64_t fy_i = 0.0;
-            r64_t fz_i = 0.0;
-            r64_t p_energy_i = 0.0;
             const idx_t nb = neighbor[i][0];
-
             for (idx_t k = 0; k < nb; ++k)
             {
                 const idx_t j = neighbor[i][1 + 2*k];
@@ -98,28 +115,34 @@ namespace dosm
 
                 const r64_t uij = 4.0 * epsilon * (_invR12 - _invR6);
                 energy += uij;
-                p_energy_i += 0.5 * uij;
 
-                // static idx_t socketCount = 0;
-                // if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
-                // {
-                //     const r64_t r = std::sqrt(r2);
-                //     chr_t data[256];
-                //     i32_t len = snprintf(data, sizeof(data), "LJ\t%.17g\t%.17g\n", r / sigma, uij);
-                //     if (len > 0)
-                //         result->idosmSocket->send(data, (idx_t)len);
-                // }
+                static idx_t socketCount = 0;
+                if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
+                {
+                    const r64_t r = std::sqrt(r2);
+                    chr_t data[256];
+                    i32_t len = snprintf(data, sizeof(data), "LJ\t%.17g\t%.17g\n", r / sigma, uij);
+                    if (len > 0)
+                        result->idosmSocket->send(data, (idx_t)len);
+                }
 
                 const r64_t oij = 48.0 * epsilon * (_invR12 - 0.5 * _invR6);
-                fx_i += oij * (dx/r2);
-                fy_i += oij * (dy/r2);
-                fz_i += oij * (dz/r2);
-            }
+                const r64_t fx = oij * (dx/r2);
+                const r64_t fy = oij * (dy/r2);
+                const r64_t fz = oij * (dz/r2);
 
-            particles[i].force(0) += fx_i;
-            particles[i].force(1) += fy_i;
-            particles[i].force(2) += fz_i;
-            particles[i].p_energy += p_energy_i;
+                particles[i].force(0) += fx;
+                particles[i].force(1) += fy;
+                particles[i].force(2) += fz;
+
+                particles[j].force(0) -= fx;
+                particles[j].force(1) -= fy;
+                particles[j].force(2) -= fz;
+
+                // ui = uj = 1/2 uij (convention)
+                particles[i].p_energy += 0.5 * uij;
+                particles[j].p_energy += 0.5 * uij;
+            }
 
             // DOSM_PROGRESS("Lennard-Jones Periodic (NB)", i + 1, n, -1);
         }

@@ -41,10 +41,11 @@ FetchContent_MakeAvailable(eigen)
     set(DOSM_SOURCES
             src/dosmEntity.cpp
             src/dosmParticle.cpp
-            src/dosmFactor.cpp
+            src/dosmMetric.cpp
             src/dosmLawLJ.cpp 
             src/dosmLawLJP.cpp
             src/dosmLawLJPNB.cpp
+        #     src/dosmLawLJPNB_OMP.cpp
             src/dosmLawVV.cpp 
             src/dosmSocketPublisher.cpp
        )
