@@ -1,17 +1,53 @@
-# DOSM-Molecular-Dynamics
+# DOSM — Molecular Dynamics Framework
 
-DOSM-Molecular-Dynamics is a lightweight C++ framework for numerical simulation of particle systems.
+DOSM is a modular C++ framework for molecular dynamics simulation of particle systems.
 
-The project implements the core elements of a molecular dynamics workflow, including:
+It implements several variants of the Lennard-Jones interaction model and provides configurable execution through a command-line interface.
 
-* Particle-based system representation
-* Time integration with a velocity-Verlet scheme
-* Short-range interactions
-* Periodic boundary conditions
-* Basic thermodynamic quantities (energy, temperature)
-* Trajectory export for visualization (e.g. VMD)
+---
 
-The code is designed for experimentation and learning, and is structured to allow future extensions.
+## Features
+
+- Particle-based system representation  
+- Velocity-Verlet time integration  
+- Lennard-Jones interactions  
+- Periodic boundary conditions  
+- Neighbor list (O(N))  
+- Cell list implementation (O(N))  
+- OpenMP parallelization  
+- Configurable simulation parameters via CLI  
+- CSV data export  
+- PDB trajectory export (VMD compatible)  
+- Optional socket-based live streaming  
+
+---
+
+## Visualization
+
+Visualization of particle motion based on simulation data,
+exported in PDB format for analysis with VMD.
+
+![DOSM simulation preview](assets/v1.gif)
+![DOSM simulation preview](assets/v2.gif)
+
+---
+
+## Interaction Laws
+
+The following interaction models are available:
+
+- `LJ` — basic Lennard-Jones  
+- `LJP` — periodic Lennard-Jones  
+- `LJPNB` — periodic + neighbor list  
+- `LJPNBCL` — periodic + neighbor list + cell list (OpenMP)  
+
+Select using:
+
+```bash
+--law LJPNBCL
+```
+
+---
 
 ## Build
 
@@ -20,33 +56,68 @@ cmake -S . -B build
 cmake --build build
 ```
 
+---
+
 ## Run
 
+Display available options:
+
 ```bash
-./build/dosmetric
+./build/dosmetric --help
 ```
 
-This generates:
+Example execution:
 
-* `dosmdata.csv` — numerical data per time step (positions, momenta, energies, temperature)
-* `dosmvisual.pdb` — trajectory file for visualization (e.g. with VMD)
+```bash
+OMP_NUM_THREADS=8 ./build/dosmetric \
+--law LJPNBCL \
+--input input/particule \
+--csv out.csv \
+--pdb out.pdb \
+--seed 42 \
+--mass 18.0 \
+--charge 0.0 \
+--sigma 3.0 \
+--epsilon 0.2 \
+--length 42.0 \
+--rcut 10.0 \
+--skin 0.0 \
+--dt 1.0 \
+--steps 10000 \
+--gridx 4 \
+--gridy 4 \
+--stepevery 10 \
+--stepsocket 5 \
+--ip 127.0.0.1 \
+--port 5555
+```
 
-## Visualization
+---
 
-Visualization of particle motion based on simulation data,
-computed by a lightweight C++ engine and exported in PDB format for analysis with VMD.
+## Output
 
-![DOSM simulation preview](assets/v1.gif)
-![DOSM simulation preview](assets/v2.gif)
+- `dosmdata.csv` — time evolution of positions, momenta, forces, energies, temperature  
+- `dosmvisual.pdb` — trajectory file for visualization (e.g. VMD)  
 
-## Project status
+---
 
-This project is a work in progress.
-The current focus is on validating physical behavior and numerical consistency.
+## Parallel Execution
 
-Possible future directions include:
+OpenMP parallelism can be controlled via:
 
-* Performance improvements (vectorization, parallelism)
-* Additional interaction models
-* Extended analysis tools
-* Visualization and rendering experiments
+```bash
+OMP_NUM_THREADS=8 ./build/dosmetric ...
+```
+
+---
+
+## Project Status
+
+The current implementation supports scalable short-range molecular dynamics simulations using CPU parallelism.
+
+Future work may include:
+
+- Automatic grid tuning  
+- Performance benchmarking  
+- Additional interaction models  
+- Extended validation tools  
