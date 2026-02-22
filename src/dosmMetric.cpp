@@ -18,7 +18,7 @@
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1.0
-#define DOSM_STEPS       1000
+#define DOSM_STEPS       10000
 #define DOSM_STEP_EVERY  10
 #define DOSM_IP          "127.0.0.1"
 #define DOSM_PORT        5555

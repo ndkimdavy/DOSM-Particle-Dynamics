@@ -27,12 +27,11 @@ namespace dosm
             virtual void buildNeighborList(
                 vector_t<vector_t<idx_t>>& neighbor, 
                 const vector_t<DosmParticle>& particles,
-                const vector_t<tensor_t<r64_t, 3>>& images,
                 idx_t n,
                 r64_t limit,
                 idx_t maxNeighbor);
     };
-
+    
 } // namespace dosm
 
 #endif // DOSM_LAW_LJPNB_HPP

@@ -47,12 +47,10 @@ namespace dosm
     void DosmLawLJPNBCL_OMP::buildNeighborList(
         vector_t<vector_t<idx_t>>& neighbor,
         const vector_t<DosmParticle>& particles,
-        const vector_t<tensor_t<r64_t, 3>>& images, 
         idx_t n,
         r64_t limit,
         idx_t maxNeighbor)
     {
-        (void)images; // unused 
         buildGrid();
 
         neighbor.resize(n);
@@ -146,7 +144,7 @@ namespace dosm
             const r64_t density = (volume > 0.0) ? ((r64_t)n / volume) : 0.0;
             const idx_t n_max_neighbor = ((idx_t)(density * 4.0 * M_PI * rcutL3)) * 2;
 
-            buildNeighborList(neighbor, particles, images, n, limit, n_max_neighbor);
+            buildNeighborList(neighbor, particles, n, limit, n_max_neighbor);
         }
 
         // Force / potential energy per OpenMP thread
