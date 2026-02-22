@@ -1,8 +1,6 @@
 #include "dosmLawLJP.hpp"
 #include "idosmSocket.hpp" 
 
-#define STEP_SOCKET 1000
-
 namespace dosm
 {
     DosmLawLJP::DosmLawLJP(vector_t<DosmParticle>& particles, 
@@ -61,7 +59,7 @@ namespace dosm
                     energy += uij;
 
                     static idx_t socketCount = 0;
-                    if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
+                    if (result->idosmSocket && config.stepSocket > 0 && !(socketCount++ % config.stepSocket))
                     {
                         const r64_t r = std::sqrt(r2);
                         chr_t data[256];

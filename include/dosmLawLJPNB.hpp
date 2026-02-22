@@ -14,15 +14,13 @@ namespace dosm
                 r64_t epsilon, 
                 r64_t boxLength, 
                 r64_t rayCut, 
-                r64_t skin, 
-                idx_t stepEvery = 10);
+                r64_t skin);
             ~DosmLawLJPNB(void) = default;
             void kernel(Result* result) override;
 
         protected:
             vector_t<vector_t<idx_t>> neighbor;
             r64_t skin;
-            idx_t stepEvery;
             idx_t stepCount = 0;
             virtual void buildNeighborList(
                 vector_t<vector_t<idx_t>>& neighbor, 

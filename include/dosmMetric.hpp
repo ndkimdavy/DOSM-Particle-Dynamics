@@ -13,7 +13,7 @@ namespace dosm
     class DosmMetric
     {
         public:
-            DosmMetric(const str_t& file);
+            DosmMetric(void);
             ~DosmMetric(void) = default;
             void run(void); 
 
@@ -23,6 +23,7 @@ namespace dosm
 
         private:
             DosmParticleSnap dosmParticleSnap;
+            std::unique_ptr<IDosmLaw> baseLaw;
             std::unique_ptr<IDosmLaw> idosmLaw;
             std::unique_ptr<IDosmSocket> idosmSocket;
     };

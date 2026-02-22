@@ -1,8 +1,8 @@
 #!/bin/bash
 # dosmplotcsv — plots from CSV
 
-CSV="dosmdata.csv"
-TMP_FILE="/tmp/dosmdata.dat"
+CSV="out.csv"
+TMP_FILE="/tmp/out.dat"
 TAIL_SIZE=$((4 * 2 ** 30))
 SLEEP=1
 

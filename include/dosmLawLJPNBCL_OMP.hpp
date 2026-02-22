@@ -15,15 +15,14 @@ namespace dosm
                 r64_t boxLength,
                 r64_t rayCut,
                 r64_t skin,
-                idx_t dimX,
-                idx_t dimY,
-                idx_t stepEvery = 10);
+                idx_t gridDimX,
+                idx_t gridDimY);
             ~DosmLawLJPNBCL_OMP(void) override = default;
             void kernel(Result* result) override;
 
         protected:
-            idx_t dimX;
-            idx_t dimY;
+            idx_t gridDimX;
+            idx_t gridDimY;
             r64_t subBoxLengthX;
             r64_t subBoxLengthY;
             vector_t<vector_t<idx_t>> grid;

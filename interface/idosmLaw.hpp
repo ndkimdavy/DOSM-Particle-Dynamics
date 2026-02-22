@@ -2,6 +2,7 @@
 #define IDOSM_LAW_HPP
 
 #include "dosmBasic.hpp"
+#include "dosmConfig.hpp"
 #include "dosmParticle.hpp"
 
 namespace dosm

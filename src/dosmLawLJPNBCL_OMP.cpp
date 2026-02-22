@@ -2,8 +2,6 @@
 #include "idosmSocket.hpp"
 #include <omp.h>
 
-#define STEP_SOCKET 10
-
 namespace dosm
 {
     DosmLawLJPNBCL_OMP::DosmLawLJPNBCL_OMP(vector_t<DosmParticle>& particles, 
@@ -12,13 +10,12 @@ namespace dosm
         r64_t boxLength, 
         r64_t rayCut, 
         r64_t skin, 
-        idx_t dimX,
-        idx_t dimY,
-        idx_t stepEvery) : DosmLawLJPNB(particles, sigma, epsilon, boxLength, rayCut, skin, stepEvery), dimX(dimX), dimY(dimY)
+        idx_t gridDimX,
+        idx_t gridDimY) : DosmLawLJPNB(particles, sigma, epsilon, boxLength, rayCut, skin), gridDimX(gridDimX), gridDimY(gridDimY)
     {
-        subBoxLengthX = boxLength / (r64_t)dimX;
-        subBoxLengthY = boxLength / (r64_t)dimY;
-        grid.resize(dimX * dimY);
+        subBoxLengthX = boxLength / (r64_t)gridDimX;
+        subBoxLengthY = boxLength / (r64_t)gridDimY;
+        grid.resize(gridDimX * gridDimY);
     }
 
     void DosmLawLJPNBCL_OMP::buildGrid(void)
@@ -36,10 +33,10 @@ namespace dosm
 
             idx_t cellX = (idx_t)(x / subBoxLengthX);
             idx_t cellY = (idx_t)(y / subBoxLengthY);
-            if (cellX >= dimX) cellX = dimX - 1;
-            if (cellY >= dimY) cellY = dimY - 1;
+            if (cellX >= gridDimX) cellX = gridDimX - 1;
+            if (cellY >= gridDimY) cellY = gridDimY - 1;
 
-            const idx_t cellId = cellY * dimX + cellX;
+            const idx_t cellId = cellY * gridDimX + cellX;
             grid[cellId].push_back(i);
         }
     }
@@ -61,10 +58,10 @@ namespace dosm
         }
 
         #pragma omp parallel for collapse(2) schedule(static)
-        for (idx_t cellY = 0; cellY < dimY; ++cellY)
-        for (idx_t cellX = 0; cellX < dimX; ++cellX)
+        for (idx_t cellY = 0; cellY < gridDimY; ++cellY)
+        for (idx_t cellX = 0; cellX < gridDimX; ++cellX)
         {
-            const idx_t cellId = cellY * dimX + cellX;
+            const idx_t cellId = cellY * gridDimX + cellX;
             const auto& cell = grid[cellId];
 
             // Loop over particles i in this (owner) cell
@@ -80,12 +77,12 @@ namespace dosm
                     idx_t neighborCellY = (idx_t)((int)cellY + offsetY);
 
                     // Periodicity on the cell grid
-                    if ((int)neighborCellX < 0) neighborCellX += dimX;
-                    if (neighborCellX >= dimX) neighborCellX -= dimX;
-                    if ((int)neighborCellY < 0) neighborCellY += dimY;
-                    if (neighborCellY >= dimY) neighborCellY -= dimY;
+                    if ((int)neighborCellX < 0) neighborCellX += gridDimX;
+                    if (neighborCellX >= gridDimX) neighborCellX -= gridDimX;
+                    if ((int)neighborCellY < 0) neighborCellY += gridDimY;
+                    if (neighborCellY >= gridDimY) neighborCellY -= gridDimY;
 
-                    const idx_t neighborCellId = neighborCellY * dimX + neighborCellX;
+                    const idx_t neighborCellId = neighborCellY * gridDimX + neighborCellX;
                     const auto& neighborCell = grid[neighborCellId];
 
                     // Loop over candidate particles j in the neighboring cell
@@ -134,7 +131,7 @@ namespace dosm
         }
 
         // Build neighbor list (cell-list)
-        if (neighbor.size() != n || ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0)))
+        if (neighbor.size() != n || ((config.stepEvery > 0) && ((stepCount++ % config.stepEvery) == 0)))
         {
             const r64_t rcutL  = rayCut + skin;
             const r64_t limit  = rcutL * rcutL;
@@ -192,6 +189,16 @@ namespace dosm
 
                     const r64_t uij = 4.0 * epsilon * (invR12 - invR6);
                     energy += uij;
+
+                    static idx_t socketCount = 0;
+                    if (tid == 0 && result->idosmSocket && config.stepSocket > 0 && !(socketCount++ % config.stepSocket))
+                    {
+                        const r64_t r = std::sqrt(r2);
+                        chr_t data[256];
+                        i32_t len = snprintf(data, sizeof(data), "LJ\t%.17g\t%.17g\n", r / sigma, uij);
+                        if (len > 0)
+                            result->idosmSocket->send(data, (idx_t)len);
+                    }
 
                     const r64_t oij  = 48.0 * epsilon * (invR12 - 0.5 * invR6);
                     const r64_t fxij = oij * (dx / r2);

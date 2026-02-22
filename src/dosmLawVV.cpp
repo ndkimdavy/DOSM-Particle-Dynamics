@@ -7,15 +7,13 @@
 #define RANDOM_UNIT()    (rand() / (r64_t)RAND_MAX)
 #define RANDOM_SIGN()    ((RANDOM_UNIT() < 0.5) ? -1.0 : 1.0)
 #define GAMMA 0.01
-#define STEP_SOCKET 1
 
 namespace dosm
 {
     DosmLawVV::DosmLawVV(IDosmLaw& idosmLaw, 
         DosmParticleSnap::Snap& snap, 
         r64_t dt, 
-        r64_t boxLength, 
-        idx_t stepEvery) : idosmLaw(idosmLaw), snap(snap), dt(dt), boxLength(boxLength), stepEvery(stepEvery)
+        r64_t boxLength) : idosmLaw(idosmLaw), snap(snap), dt(dt), boxLength(boxLength)
     {
         init();
     }
@@ -59,7 +57,7 @@ namespace dosm
         r64_t T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
 
         // THERMO BERENDSEN
-        if ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0) && T > 0.0)
+        if ((config.stepEvery > 0) && ((stepCount++ % config.stepEvery) == 0) && T > 0.0)
         {
             r64_t lambda = 1.0 + GAMMA * (T0 / T - 1.0);
 
@@ -84,7 +82,7 @@ namespace dosm
         }
 
         static idx_t socketCount = 0;
-        if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
+        if (result->idosmSocket && config.stepSocket > 0 && !(socketCount++ % config.stepSocket))
         {
             const r64_t Ep   = result->energy;
             const r64_t Etot = Ek + Ep;
@@ -93,7 +91,7 @@ namespace dosm
             if (len > 0) 
                 result->idosmSocket->send(data, (idx_t)len);
         }
-
+        
         snap.t = snap.t + dt;
     }
 

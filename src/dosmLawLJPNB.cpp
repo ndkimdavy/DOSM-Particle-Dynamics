@@ -1,8 +1,6 @@
 #include "dosmLawLJPNB.hpp"
 #include "idosmSocket.hpp" 
 
-#define STEP_SOCKET 10
-
 namespace dosm
 {
     DosmLawLJPNB::DosmLawLJPNB(vector_t<DosmParticle>& particles, 
@@ -10,8 +8,7 @@ namespace dosm
         r64_t epsilon, 
         r64_t boxLength, 
         r64_t rayCut, 
-        r64_t skin, 
-        idx_t stepEvery) : DosmLawLJP(particles, sigma, epsilon, boxLength, rayCut), skin(skin), stepEvery(stepEvery) 
+        r64_t skin) : DosmLawLJP(particles, sigma, epsilon, boxLength, rayCut), skin(skin) 
     {}
 
     void DosmLawLJPNB::buildNeighborList(
@@ -66,7 +63,7 @@ namespace dosm
         }
 
         // Build neighbor list
-        if (neighbor.size() != n || ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0)))
+        if (neighbor.size() != n || ((config.stepEvery > 0) && ((stepCount++ % config.stepEvery) == 0)))
         {
             const r64_t rcutL = rayCut + skin;
             const r64_t limit = rcutL * rcutL;
@@ -103,7 +100,7 @@ namespace dosm
                 energy += uij;
 
                 static idx_t socketCount = 0;
-                if (result->idosmSocket && !(socketCount++ % STEP_SOCKET))
+                if (result->idosmSocket && config.stepSocket > 0 && !(socketCount++ % config.stepSocket))
                 {
                     const r64_t r = std::sqrt(r2);
                     chr_t data[256];

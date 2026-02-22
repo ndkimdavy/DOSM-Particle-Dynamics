@@ -9,28 +9,13 @@
 #include <fstream>
 #include <stdexcept>
 
-#define DOSM_SEED        42
-#define DOSM_SIGMA       3.0
-#define DOSM_EPSILON     0.2
-#define DOSM_BOX_LENGTH  42.0
-#define DOSM_RAY_CUT     10.0
-#define DOSM_SKIN        0.0
-#define DOSM_MASS        18.0
-#define DOSM_CHARGE      0.0
-#define DOSM_DT          1.0
-#define DOSM_STEPS       10000
-#define DOSM_STEP_EVERY  10
-#define DOSM_IP          "127.0.0.1"
-#define DOSM_PORT        5555
-
-
 namespace dosm
 {
 
-    DosmMetric::DosmMetric(const str_t& file)
+    DosmMetric::DosmMetric(void)
     {
-        std::srand(DOSM_SEED);
-        loadFile(file);
+        std::srand(config.seed);
+        loadFile(config.inputFile);
     }
 
     void DosmMetric::loadFile(const str_t& file)
@@ -49,7 +34,7 @@ namespace dosm
         r64_t x, y, z;
         while (in >> type >> x >> y >> z)
         {
-            DosmParticle particle(DOSM_MASS, DOSM_CHARGE);
+            DosmParticle particle(config.mass, config.charge);
             particle.position(0) = x;
             particle.position(1) = y;
             particle.position(2) = z;
@@ -64,8 +49,8 @@ namespace dosm
 
     void DosmMetric::outFile(void)
     {
-        const str_t csvFile = "dosmdata.csv";
-        const str_t pdbFile = "dosmvisual.pdb";
+        const str_t csvFile = config.csvFile;
+        const str_t pdbFile = config.pdbFile;
 
         std::ofstream csv(csvFile);
         if (!csv)
@@ -101,7 +86,7 @@ namespace dosm
                 line,
                 sizeof(line),
                 "CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 1\n",
-                DOSM_BOX_LENGTH, DOSM_BOX_LENGTH, DOSM_BOX_LENGTH
+                config.boxLength, config.boxLength, config.boxLength
                 );
         pdb << line;
 
@@ -183,25 +168,36 @@ namespace dosm
         DosmParticleSnap::Snap currSnap = dosmParticleSnap.snaps.back();
 
         for (auto& particle : currSnap.particles)
-            particle.mass = DOSM_MASS;
+            particle.mass = config.mass;
+        
+        baseLaw.reset();
+        if(config.law == "LJ")
+            baseLaw = std::make_unique<DosmLawLJ>(currSnap.particles, config.sigma, config.epsilon);
+        else if(config.law == "LJP")
+            baseLaw = std::make_unique<DosmLawLJP>(currSnap.particles, config.sigma, config.epsilon, config.boxLength, config.rayCut);
+        else if(config.law == "LJPNB")
+            baseLaw = std::make_unique<DosmLawLJPNB>(currSnap.particles, config.sigma, config.epsilon, config.boxLength, config.rayCut, config.skin);
+        else if(config.law == "LJPNBCL")
+            baseLaw = std::make_unique<DosmLawLJPNBCL_OMP>(currSnap.particles, config.sigma, config.epsilon, config.boxLength, config.rayCut, config.skin, config.gridDimX, config.gridDimY);
+        else
+        {
+            DOSM_LOG_ERROR("Unknown law: " + config.law);
+            throw std::runtime_error("dosmMetric: unknown law");
+        }
 
-        auto dosmLawLJ = std::make_unique<DosmLawLJ>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
-        auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
-        auto dosmLawLJPNB = std::make_unique<DosmLawLJPNB>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, DOSM_STEP_EVERY);
-        auto dosmLawLJPNBCL_OMP = std::make_unique<DosmLawLJPNBCL_OMP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, 16, 16, DOSM_STEP_EVERY);
-        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNBCL_OMP, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
-        // idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNB, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
+        idosmLaw = std::make_unique<DosmLawVV>(*baseLaw, currSnap, config.dt, config.boxLength);
         dosmParticleSnap.snaps[0] = currSnap;
-        idosmSocket = std::make_unique<DosmSocketPublisher>(DOSM_IP, (ui16_t)DOSM_PORT);
+        idosmSocket = std::make_unique<DosmSocketPublisher>(config.ip, config.port);
         idosmSocket->init();
+
         auto t0 = std::chrono::steady_clock::now();
-        for (idx_t step = 1; step < DOSM_STEPS; ++step)
+        for (idx_t step = 1; step < config.steps; ++step)
         {
             result.idosmSocket = idosmSocket.get();
             idosmLaw->kernel(&result);
             dosmParticleSnap.snaps.push_back(currSnap);
             ui64_t elapsed = (ui64_t)std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0).count();
-            DOSM_PROGRESS("Time step", step + 1, DOSM_STEPS, elapsed);
+            DOSM_PROGRESS("Time step", step + 1, config.steps, elapsed);
         }
 
         idosmSocket->release();
