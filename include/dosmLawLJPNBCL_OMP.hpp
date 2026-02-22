@@ -28,6 +28,13 @@ namespace dosm
             r64_t subBoxLengthY;
             vector_t<vector_t<idx_t>> grid;
             void buildGrid(void);
+            void buildNeighborList(
+                vector_t<vector_t<idx_t>>& neighbor, 
+                const vector_t<DosmParticle>& particles,
+                const vector_t<tensor_t<r64_t, 3>>& images,
+                idx_t n,
+                r64_t limit,
+                idx_t maxNeighbor) override;
     };
 
 } // namespace dosm

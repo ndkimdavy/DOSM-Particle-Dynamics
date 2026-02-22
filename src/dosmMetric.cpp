@@ -18,7 +18,7 @@
 #define DOSM_MASS        18.0
 #define DOSM_CHARGE      0.0
 #define DOSM_DT          1.0
-#define DOSM_STEPS       2000
+#define DOSM_STEPS       1000
 #define DOSM_STEP_EVERY  10
 #define DOSM_IP          "127.0.0.1"
 #define DOSM_PORT        5555
@@ -188,9 +188,9 @@ namespace dosm
         auto dosmLawLJ = std::make_unique<DosmLawLJ>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON);
         auto dosmLawLJP = std::make_unique<DosmLawLJP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT);
         auto dosmLawLJPNB = std::make_unique<DosmLawLJPNB>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, DOSM_STEP_EVERY);
-        // auto dosmLawLJPNB_OMP = std::make_unique<DosmLawLJPNB_OMP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, DOSM_STEP_EVERY);
-        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNB, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
-
+        auto dosmLawLJPNBCL_OMP = std::make_unique<DosmLawLJPNBCL_OMP>(currSnap.particles, DOSM_SIGMA, DOSM_EPSILON, DOSM_BOX_LENGTH, DOSM_RAY_CUT, DOSM_SKIN, 16, 16, DOSM_STEP_EVERY);
+        idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNBCL_OMP, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
+        // idosmLaw = std::make_unique<DosmLawVV>(*dosmLawLJPNB, currSnap, DOSM_DT, DOSM_BOX_LENGTH, DOSM_STEP_EVERY);
         dosmParticleSnap.snaps[0] = currSnap;
         idosmSocket = std::make_unique<DosmSocketPublisher>(DOSM_IP, (ui16_t)DOSM_PORT);
         idosmSocket->init();

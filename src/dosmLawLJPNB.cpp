@@ -67,7 +67,7 @@ namespace dosm
         }
 
         // Build neighbor list
-        if ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0))
+        if (neighbor.size() != n || ((stepEvery > 0) && ((stepCount++ % stepEvery) == 0)))
         {
             const r64_t rcutL = rayCut + skin;
             const r64_t limit = rcutL * rcutL;
