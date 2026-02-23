@@ -57,7 +57,7 @@ namespace dosm
         r64_t T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
 
         // THERMO BERENDSEN
-        if ((config.stepEvery > 0) && ((stepCount++ % config.stepEvery) == 0) && T > 0.0)
+        if (config.thermostat && (config.stepEvery > 0) && ((stepCount % config.stepEvery) == 0) && T > 0.0)
         {
             r64_t lambda = 1.0 + GAMMA * (T0 / T - 1.0);
 
@@ -80,7 +80,8 @@ namespace dosm
 
             T = (Ndl > 0) ? (Ek / (Ndl * CONSTANT_R)) : 0.0;
         }
-
+        stepCount++;
+        
         static idx_t socketCount = 0;
         if (result->idosmSocket && config.stepSocket > 0 && !(socketCount++ % config.stepSocket))
         {
@@ -99,6 +100,36 @@ namespace dosm
     {
         const idx_t N   = snap.particles.size();
         const idx_t Ndl = 3 * N - 3;
+
+
+        
+        // =========================================================
+        // EXAM MODE : si un fichier mci est fourni, on respecte p(t0)
+        // =========================================================
+        if (!config.mciFile.empty())
+        {
+            // v = p/m (au cas où loadFileExam n'aurait rempli que momentum)
+            for (auto& particle : snap.particles)
+                particle.velocity = particle.momentum / particle.mass;
+
+            // F(0), Ep(0)
+            IDosmLaw::Result result;
+            idosmLaw.kernel(&result);
+
+            // Ek(0)
+            for (auto& particle : snap.particles)
+            {
+                particle.k_energy =
+                    (1.0 / (2.0 * CONVERSION_FORCE * particle.mass)) *
+                    (particle.momentum(0) * particle.momentum(0) +
+                    particle.momentum(1) * particle.momentum(1) +
+                    particle.momentum(2) * particle.momentum(2));
+            }
+            return;
+        }
+
+
+        
 
         for (auto& particle : snap.particles)
         {
