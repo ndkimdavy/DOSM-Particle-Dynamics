@@ -14,6 +14,8 @@ int main(int argc, char** argv)
             "Usage:\n"
             "  --law LJ|LJP|LJPNB|LJPNBCL\n"
             "  --input <file>\n"
+            "  --mci <file>        (optional, exam initial momenta)\n"
+            "  --nomci             (force disable mci)\n"
             "  --csv <file> --pdb <file>\n"
             "  --seed <u32>\n"
             "  --mass <r64> --charge <r64>\n"
@@ -22,6 +24,7 @@ int main(int argc, char** argv)
             "  --dt <r64> --steps <usize>\n"
             "  --gridx <usize> --gridy <usize>\n"
             "  --stepevery <usize>\n"
+            "  --thermostat 0|1\n"
             "  --stepsocket <usize>\n"
             "  --ip <string> --port <u16>\n"
         );
@@ -51,6 +54,8 @@ int main(int argc, char** argv)
             }
             else if (a == "--law")        config.law = need_value("--law");
             else if (a == "--input")      config.inputFile = need_value("--input");
+            else if (a == "--mci")        config.mciFile = need_value("--mci");
+            else if (a == "--nomci")      config.mciFile.clear();
             else if (a == "--csv")        config.csvFile = need_value("--csv");
             else if (a == "--pdb")        config.pdbFile = need_value("--pdb");
             else if (a == "--seed")       config.seed = (ui32_t)std::stoul(need_value("--seed"));
@@ -66,6 +71,7 @@ int main(int argc, char** argv)
             else if (a == "--gridx")      config.gridDimX = (idx_t)std::stoull(need_value("--gridx"));
             else if (a == "--gridy")      config.gridDimY = (idx_t)std::stoull(need_value("--gridy"));
             else if (a == "--stepevery")  config.stepEvery = (idx_t)std::stoull(need_value("--stepevery"));
+            else if (a == "--thermostat") config.thermostat = (bool)std::stoul(need_value("--thermostat"));
             else if (a == "--stepsocket") config.stepSocket = (idx_t)std::stoull(need_value("--stepsocket"));
             else if (a == "--ip")         config.ip = need_value("--ip");
             else if (a == "--port")

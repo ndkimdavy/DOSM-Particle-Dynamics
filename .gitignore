@@ -1,7 +1,10 @@
 build/
+doc/
+*.pdf
+*.vscode
 *.dat
 *.swp
 *.csv
 *.pdb
-*.pdf
-*.vscode
+
+

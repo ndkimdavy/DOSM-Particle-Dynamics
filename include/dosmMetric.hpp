@@ -19,6 +19,7 @@ namespace dosm
 
         private:
             void loadFile(const str_t& file);
+            void loadFileExam(const str_t& xyzFile, const str_t& mciFile);
             void outFile(void);
 
         private:

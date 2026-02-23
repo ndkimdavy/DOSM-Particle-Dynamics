@@ -9,6 +9,7 @@ namespace dosm
     {
         str_t law        = "LJPNBCL";
         str_t inputFile  = "input.txt";
+        str_t mciFile    = "examen_270226_mci";
         str_t csvFile    = "dosmdata.csv";
         str_t pdbFile    = "dosmvisual.pdb";
         ui32_t seed      = 42;
@@ -24,6 +25,7 @@ namespace dosm
         idx_t gridDimX   = 16;
         idx_t gridDimY   = 16;
         idx_t stepEvery  = 10;
+        bool thermostat  = false;
         idx_t stepSocket = 10;
         str_t ip         = "127.0.0.1";
         ui16_t port      = 5555;
